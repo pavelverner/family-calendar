@@ -688,10 +688,10 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
               <input className="form-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
 
               <div className="time-row">
-                <label className="time-label">
-                  <input type="checkbox" checked={useTime} onChange={e => setUseTime(e.target.checked)} />
-                  Konkrétní čas
-                </label>
+                <button className={`time-toggle ${useTime ? 'on' : ''}`} onClick={() => setUseTime(v => !v)}>
+                  <span className="time-toggle-knob" />
+                </button>
+                <span className="time-toggle-label" onClick={() => setUseTime(v => !v)}>Konkrétní čas</span>
                 {useTime && (
                   <input className="form-input time-inp" type="time" step="900" value={time} onChange={e => setTime(e.target.value)} />
                 )}

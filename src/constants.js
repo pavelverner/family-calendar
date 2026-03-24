@@ -19,13 +19,14 @@ export const MONTHS_CZ = [
 ];
 
 export const CATEGORIES = {
-  none:   { label: 'Obecné',  icon: '📌' },
-  prace:  { label: 'Práce',   icon: '💼' },
-  skola:  { label: 'Škola',   icon: '🎒' },
-  sport:  { label: 'Sport',   icon: '🏃' },
-  doktor: { label: 'Doktor',  icon: '🏥' },
-  rodina: { label: 'Rodina',  icon: '🏠' },
-  zabava: { label: 'Zábava',  icon: '🎉' },
+  none:    { label: 'Obecné',   icon: '📌' },
+  prace:   { label: 'Práce',    icon: '💼' },
+  skola:   { label: 'Škola',    icon: '🏫' },
+  sport:   { label: 'Sport',    icon: '🎾' },
+  doktor:  { label: 'Doktor',   icon: '🏥' },
+  rodina:  { label: 'Rodina',   icon: '👨‍👩‍👧' },
+  hlidani: { label: 'Hlídání',  icon: '🧸' },
+  zabava:  { label: 'Zábava',   icon: '🎉' },
 };
 
 export const REPEAT_OPTIONS = [
