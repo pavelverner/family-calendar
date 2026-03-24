@@ -101,6 +101,7 @@ export default function App() {
   const [showModal,   setShowModal]   = useState(false);
   const [filters,     setFilters]     = useState(new Set(Object.keys(MEMBERS)));
   const [view,        setView]        = useState('month'); // 'month' | 'week'
+  const [dark, setDark] = useDarkMode();
 
   useEffect(() => onAuthStateChanged(auth, u => setUser(u ?? null)), []);
 
@@ -115,7 +116,6 @@ export default function App() {
   if (!user) return <Login />;
 
   const currentMemberKey = EMAIL_TO_KEY[user.email] ?? 'vsichni';
-  const [dark, setDark] = useDarkMode();
   const today = todayStr();
 
   function eventsForDay(ds) {
