@@ -503,19 +503,20 @@ input  { font: inherit; }
   text-transform: capitalize;
 }
 .close-btn {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: #F1F5F9;
-  color: #94A3B8;
-  font-size: .8rem;
+  background: #E2E8F0;
+  color: #475569;
+  font-size: .85rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all .15s;
   flex-shrink: 0;
 }
-.close-btn:hover { background: #E2E8F0; color: #475569; }
+.close-btn:hover { background: #CBD5E1; color: #1E293B; }
 
 /* Templates */
 .templates-section { padding: 0 16px 12px; }

@@ -1,8 +1,8 @@
 export const MEMBERS = {
-  pavel:   { name: 'Pavel',   color: '#2563EB', light: '#DBEAFE' },
-  eliska:  { name: 'Eliška',  color: '#DB2777', light: '#FCE7F3' },
-  filip:   { name: 'Filip',   color: '#16A34A', light: '#DCFCE7' },
-  vsichni: { name: 'Všichni', color: '#D97706', light: '#FEF3C7' },
+  pavel:   { name: 'Pavel',   color: '#16A34A', light: '#DCFCE7' },
+  eliska:  { name: 'Eliška',  color: '#EA580C', light: '#FFEDD5' },
+  filip:   { name: 'Filip',   color: '#CA8A04', light: '#FEF9C3' },
+  vsichni: { name: 'Všichni', color: '#64748B', light: '#F1F5F9' },
 };
 
 // Firebase Auth emails for Pavel and Eliška
