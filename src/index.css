@@ -672,7 +672,7 @@ input  { font: inherit; }
 /* Wizard footer — sticky above keyboard */
 .wizard-footer {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px max(env(safe-area-inset-bottom), 20px);
+  padding: 14px 16px 20px;
   background: #fff; box-shadow: 0 -1px 0 #F1F5F9;
   margin-top: 16px; position: sticky; bottom: 0; z-index: 1;
 }

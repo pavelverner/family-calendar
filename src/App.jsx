@@ -1,4 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+
+function useKeyboardHeight() {
+  const [kbH, setKbH] = useState(0);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => setKbH(Math.max(0, window.innerHeight - vv.height - vv.offsetTop));
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => { vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update); };
+  }, []);
+  return kbH;
+}
 import {
   collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc,
 } from 'firebase/firestore';
@@ -460,6 +473,7 @@ function UpcomingEvents({ events, filters, onOpenDay }) {
 // ── Day Modal (wizard) ────────────────────────────────────────────────────────
 
 function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, onUpdate, onAddTemplate, onDeleteTemplate, onClose }) {
+  const kbH = useKeyboardHeight();
   // mode: 'list' | 'step1' | 'step2'
   const [mode,     setMode]     = useState('list');
   const [editId,   setEditId]   = useState(null);
@@ -641,7 +655,7 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
               </div>
             </div>
 
-            <div className="wizard-footer">
+            <div className="wizard-footer" style={{ paddingBottom: kbH > 0 ? kbH + 12 + 'px' : undefined }}>
               <div className="wizard-dots">
                 <span className="dot active" /><span className="dot" />
               </div>
@@ -700,7 +714,7 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
               )}
             </div>
 
-            <div className="wizard-footer">
+            <div className="wizard-footer" style={{ paddingBottom: kbH > 0 ? kbH + 12 + 'px' : undefined }}>
               <div className="wizard-dots">
                 <span className="dot" /><span className="dot active" />
               </div>
