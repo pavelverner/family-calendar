@@ -28,15 +28,15 @@ export function EliskaAvatar({ size = 48 }) {
       <path d="M16.5 14 Q19.5 11.8 22 14" stroke="#92700A" strokeWidth="1.4" strokeLinecap="round" fill="none" />
       <path d="M26 14 Q28.5 11.8 31.5 14" stroke="#92700A" strokeWidth="1.4" strokeLinecap="round" fill="none" />
 
-      {/* Eyes — large green iris */}
-      <circle cx="19.5" cy="19.5" r="3.4" fill="#16803D" />
-      <circle cx="28.5" cy="19.5" r="3.4" fill="#16803D" />
+      {/* Eyes — soft green, natural size */}
+      <circle cx="19.5" cy="19.5" r="2.8" fill="#4A7C59" />
+      <circle cx="28.5" cy="19.5" r="2.8" fill="#4A7C59" />
       {/* Pupils */}
-      <circle cx="19.5" cy="19.5" r="1.9" fill="#0F1A0F" />
-      <circle cx="28.5" cy="19.5" r="1.9" fill="#0F1A0F" />
+      <circle cx="19.5" cy="19.5" r="1.6" fill="#1A1A1A" />
+      <circle cx="28.5" cy="19.5" r="1.6" fill="#1A1A1A" />
       {/* Eye highlights */}
-      <circle cx="20.6" cy="18.4" r="1" fill="white" />
-      <circle cx="29.6" cy="18.4" r="1" fill="white" />
+      <circle cx="20.4" cy="18.6" r="0.7" fill="white" />
+      <circle cx="29.4" cy="18.6" r="0.7" fill="white" />
 
       {/* Wide happy smile */}
       <path d="M18 26.5 Q24 32 30 26.5" stroke="#C06050" strokeWidth="2" strokeLinecap="round" fill="none" />
