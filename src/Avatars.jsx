@@ -2,48 +2,46 @@
 
 export function EliskaAvatar({ size = 48 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Light blue shirt */}
-      <ellipse cx="24" cy="52" rx="22" ry="14" fill="#60A5FA" />
-      {/* White Peter Pan collar */}
-      <path d="M15 41 Q24 47 33 41 Q29 50 24 50 Q19 50 15 41Z" fill="white" />
+    <svg width={size} height={size} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Blue shirt at bottom */}
+      <ellipse cx="40" cy="86" rx="34" ry="20" fill="#60A5FA" />
+      {/* White collar */}
+      <path d="M24 68 Q40 76 56 68 Q50 80 40 82 Q30 80 24 68Z" fill="white" />
 
-      {/* Long straight blonde hair — tapered side strands */}
-      <path d="M9 13 Q5 29 6 42 Q9 46 14 44 Q11 28 12 13Z" fill="#EAB308" />
-      <path d="M39 13 Q43 29 42 42 Q39 46 34 44 Q37 28 36 13Z" fill="#EAB308" />
-      {/* Hair back center */}
-      <ellipse cx="24" cy="43" rx="10" ry="4" fill="#EAB308" />
+      {/* === HAIR — large, clearly visible === */}
+      {/* Big hair block behind face */}
+      <ellipse cx="40" cy="28" rx="28" ry="28" fill="#EAB308" />
+      {/* Long side strands — wide enough to show beside face */}
+      <rect x="6"  y="26" width="16" height="44" rx="8" fill="#EAB308" />
+      <rect x="58" y="26" width="16" height="44" rx="8" fill="#EAB308" />
+      {/* Hair bottom between strands */}
+      <ellipse cx="40" cy="68" rx="18" ry="8" fill="#EAB308" />
 
-      {/* Face */}
-      <circle cx="24" cy="21" r="13" fill="#FFD5A8" />
-
-      {/* Hair top — smooth cap */}
-      <path d="M11 17 Q11 5 24 5 Q37 5 37 17 Q33 7 24 7 Q15 7 11 17Z" fill="#EAB308" />
+      {/* Face — smaller than hair block so hair clearly frames it */}
+      <circle cx="40" cy="38" r="22" fill="#FFD5A8" />
 
       {/* Ears */}
-      <ellipse cx="11" cy="21" rx="2.5" ry="3" fill="#FBBF8C" />
-      <ellipse cx="37" cy="21" rx="2.5" ry="3" fill="#FBBF8C" />
+      <ellipse cx="18" cy="38" rx="4" ry="5" fill="#FBBF8C" />
+      <ellipse cx="62" cy="38" rx="4" ry="5" fill="#FBBF8C" />
 
       {/* Arched eyebrows */}
-      <path d="M16.5 14 Q19.5 11.8 22 14" stroke="#92700A" strokeWidth="1.4" strokeLinecap="round" fill="none" />
-      <path d="M26 14 Q28.5 11.8 31.5 14" stroke="#92700A" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+      <path d="M27 29 Q32 25 37 29" stroke="#92700A" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+      <path d="M43 29 Q48 25 53 29" stroke="#92700A" strokeWidth="2.2" strokeLinecap="round" fill="none" />
 
-      {/* Eyes — soft green, natural size */}
-      <circle cx="19.5" cy="19.5" r="2.8" fill="#4A7C59" />
-      <circle cx="28.5" cy="19.5" r="2.8" fill="#4A7C59" />
-      {/* Pupils */}
-      <circle cx="19.5" cy="19.5" r="1.6" fill="#1A1A1A" />
-      <circle cx="28.5" cy="19.5" r="1.6" fill="#1A1A1A" />
-      {/* Eye highlights */}
-      <circle cx="20.4" cy="18.6" r="0.7" fill="white" />
-      <circle cx="29.4" cy="18.6" r="0.7" fill="white" />
+      {/* Eyes — friendly size */}
+      <circle cx="32" cy="36" r="5" fill="#4A7C59" />
+      <circle cx="48" cy="36" r="5" fill="#4A7C59" />
+      <circle cx="32" cy="36" r="3" fill="#1A1A1A" />
+      <circle cx="48" cy="36" r="3" fill="#1A1A1A" />
+      <circle cx="33.5" cy="34.5" r="1.2" fill="white" />
+      <circle cx="49.5" cy="34.5" r="1.2" fill="white" />
 
-      {/* Wide happy smile */}
-      <path d="M18 26.5 Q24 32 30 26.5" stroke="#C06050" strokeWidth="2" strokeLinecap="round" fill="none" />
+      {/* Smile */}
+      <path d="M30 46 Q40 54 50 46" stroke="#C06050" strokeWidth="3" strokeLinecap="round" fill="none" />
 
       {/* Blush */}
-      <ellipse cx="14.5" cy="23" rx="3.5" ry="2" fill="#FFB0C8" opacity="0.6" />
-      <ellipse cx="33.5" cy="23" rx="3.5" ry="2" fill="#FFB0C8" opacity="0.6" />
+      <ellipse cx="24" cy="42" rx="6" ry="3.5" fill="#FFB0C8" opacity="0.55" />
+      <ellipse cx="56" cy="42" rx="6" ry="3.5" fill="#FFB0C8" opacity="0.55" />
     </svg>
   );
 }
