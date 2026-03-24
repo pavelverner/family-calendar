@@ -32,7 +32,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { db, auth } from './firebase';
 import { MEMBERS, DAYS_CZ, MONTHS_CZ, CATEGORIES, REPEAT_OPTIONS, USER_EMAILS } from './constants';
 import Login from './Login';
-import { EliskaAvatar, PavelAvatar } from './Avatars';
+import { EliskaAvatar, PavelAvatar, FilipAvatar, VsichniAvatar } from './Avatars';
 
 const EMAIL_TO_KEY = Object.fromEntries(
   Object.entries(USER_EMAILS).map(([k, v]) => [v, k])
@@ -660,7 +660,12 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
                     style={{ '--c': m.color, '--l': m.light }}
                     onClick={() => setMember(key)}
                   >
-                    <span className="mem-card-avatar">{m.name[0]}</span>
+                    <span className="mem-card-avatar">
+                      {key === 'eliska'  ? <EliskaAvatar  size={44} /> :
+                       key === 'pavel'   ? <PavelAvatar   size={44} /> :
+                       key === 'filip'   ? <FilipAvatar   size={44} /> :
+                                          <VsichniAvatar  size={44} />}
+                    </span>
                     <span className="mem-card-name">{m.name}</span>
                   </button>
                 ))}
