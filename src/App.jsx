@@ -12,6 +12,19 @@ function useKeyboardHeight() {
   }, []);
   return kbH;
 }
+
+function useDarkMode() {
+  const [dark, setDark] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+  }, [dark]);
+  return [dark, setDark];
+}
 import {
   collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc,
 } from 'firebase/firestore';
@@ -101,6 +114,7 @@ export default function App() {
   if (!user) return <Login />;
 
   const currentMemberKey = EMAIL_TO_KEY[user.email] ?? 'vsichni';
+  const [dark, setDark] = useDarkMode();
   const today = todayStr();
 
   function eventsForDay(ds) {
@@ -154,6 +168,9 @@ export default function App() {
             <div className="user-badge" style={{ '--c': MEMBERS[currentMemberKey].color }}>
               {MEMBERS[currentMemberKey].name[0]}
             </div>
+            <button className="theme-btn" onClick={() => setDark(d => !d)} title="Tmavý režim">
+              {dark ? '☀️' : '🌙'}
+            </button>
             <button className="logout-btn" onClick={() => signOut(auth)} title="Odhlásit se">⎋</button>
           </div>
         </div>
@@ -182,9 +199,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* ── Upcoming ── */}
-      <UpcomingEvents events={events} filters={filters} onOpenDay={openDay} />
-
       {/* ── Views ── */}
       {view === 'month' ? (
         <MonthView
@@ -204,6 +218,9 @@ export default function App() {
           onUpdateEvent={updateEvent}
         />
       )}
+
+      {/* ── Upcoming ── */}
+      <UpcomingEvents events={events} filters={filters} onOpenDay={openDay} />
 
       <button className="fab" onClick={() => openDay(today)}>+</button>
 
