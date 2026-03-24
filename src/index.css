@@ -723,6 +723,17 @@ input  { font: inherit; }
 .btn-add-note { font-size: .85rem; color: #94A3B8; font-weight: 500; padding: 4px 0; text-align: left; }
 .btn-add-note:hover { color: #64748B; }
 
+.duration-row { display: flex; gap: 5px; flex-wrap: wrap; }
+.duration-btn {
+  flex: 1; min-width: 48px; padding: 8px 4px;
+  border-radius: 10px; font-size: .78rem; font-weight: 600;
+  border: none; background: #F1F5F9; color: #94A3B8;
+  transition: all .15s; text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.duration-btn.sel             { background: #EFF6FF; color: #2563EB; box-shadow: 0 0 0 2px #BFDBFE; }
+.duration-btn:not(.sel):hover { background: #E2E8F0; color: #475569; }
+
 .btn-tmpl {
   width: 42px; height: 42px; border-radius: 12px; font-size: 1rem;
   background: #F8FAFC; color: #94A3B8; border: none;

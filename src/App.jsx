@@ -486,6 +486,7 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
   const [date,     setDate]     = useState(dateStr);
   const [useTime,  setUseTime]  = useState(false);
   const [time,     setTime]     = useState('09:00');
+  const [duration, setDuration] = useState(60); // minutes
   const [repeat,   setRepeat]   = useState('none');
   const [note,     setNote]     = useState('');
   const [showNote, setShowNote] = useState(false);
@@ -496,7 +497,7 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
 
   function resetForm() {
     setMember(defaultMember); setCategory('none'); setTitle('');
-    setDate(dateStr); setUseTime(false); setTime('09:00');
+    setDate(dateStr); setUseTime(false); setTime('09:00'); setDuration(60);
     setRepeat('none'); setNote(''); setShowNote(false); setEditId(null);
   }
 
@@ -505,7 +506,7 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
   function startEdit(ev) {
     setEditId(ev.id); setMember(ev.member); setCategory(ev.category || 'none');
     setTitle(ev.title); setDate(ev.date); setRepeat(ev.repeat || 'none');
-    setNote(ev.note || ''); setShowNote(!!ev.note);
+    setNote(ev.note || ''); setShowNote(!!ev.note); setDuration(ev.duration ?? 60);
     if (ev.time) { setUseTime(true); setTime(ev.time); } else { setUseTime(false); }
     setMode('step1');
   }
@@ -522,12 +523,10 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
   async function handleSave() {
     if (!title.trim()) return;
     setSaving(true);
-    const data = { title: title.trim(), member, category, note, date, time: useTime ? time : null, repeat };
+    const data = { title: title.trim(), member, category, note, date, time: useTime ? time : null, duration: useTime ? duration : null, repeat };
     if (editId) await onUpdate(editId, data);
     else        await onAdd(data);
-    resetForm();
-    setMode('list');
-    setSaving(false);
+    onClose();
   }
 
   async function handleSaveTemplate() {
@@ -690,6 +689,20 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
                   <input className="form-input time-inp" type="time" step="900" value={time} onChange={e => setTime(e.target.value)} />
                 )}
               </div>
+
+              {useTime && (
+                <div className="duration-row">
+                  {[15, 30, 60, 90, 120, 180].map(m => (
+                    <button
+                      key={m}
+                      className={`duration-btn ${duration === m ? 'sel' : ''}`}
+                      onClick={() => setDuration(m)}
+                    >
+                      {m < 60 ? `${m} min` : `${m / 60} hod`}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               <div className="repeat-row">
                 {REPEAT_OPTIONS.map(o => (
