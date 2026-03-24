@@ -155,7 +155,6 @@ export default function App() {
             <button onClick={navNext}>›</button>
           </nav>
         </div>
-        </div>
         <div className="filter-chips">
           {Object.entries(MEMBERS).map(([key, m]) => (
             <button
