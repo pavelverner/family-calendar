@@ -1,87 +1,94 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- White full-bleed background (maskable safe) -->
+  <!-- White full-bleed background (maskable for Android circle crop) -->
   <rect width="512" height="512" fill="white"/>
 
-  <!-- ── Three family figures (centered, safe zone) ── -->
+  <!-- ── Calendar card ── -->
+  <!-- Soft shadow -->
+  <rect x="62" y="58" width="392" height="408" rx="52" fill="#E2E8F0"/>
+  <!-- Card body -->
+  <rect x="56" y="52" width="392" height="408" rx="52" fill="white" stroke="#E2E8F0" stroke-width="4"/>
+  <!-- Green header -->
+  <rect x="56" y="52"  width="392" height="116" rx="52" fill="#16A34A"/>
+  <rect x="56" y="136" width="392" height="32"  fill="#16A34A"/>
+  <!-- Binding rings -->
+  <rect x="168" y="28" width="26" height="68" rx="13" fill="#15803D"/>
+  <rect x="318" y="28" width="26" height="68" rx="13" fill="#15803D"/>
+  <!-- Header label -->
+  <text x="256" y="106" text-anchor="middle" dominant-baseline="middle"
+        font-family="system-ui, -apple-system, sans-serif"
+        font-weight="800" font-size="34" fill="white" letter-spacing="2">VERNOUŠČÍ</text>
 
-  <!-- ELIŠKA — left, long blonde hair -->
-  <!-- hair back -->
-  <ellipse cx="148" cy="300" rx="30" ry="35" fill="#F9D030"/>
-  <!-- hair sides -->
-  <rect x="120" y="240" width="14" height="80" rx="7" fill="#F9D030"/>
-  <rect x="162" y="240" width="14" height="80" rx="7" fill="#F9D030"/>
-  <!-- body -->
-  <ellipse cx="148" cy="370" rx="28" ry="22" fill="#EA580C"/>
-  <!-- face -->
-  <circle cx="148" cy="265" r="28" fill="#FFD5A8"/>
-  <!-- hair top -->
-  <path d="M121 263 Q121 233 148 233 Q175 233 175 263 Q170 244 148 244 Q126 244 121 263Z" fill="#F9D030"/>
-  <!-- eyes -->
-  <circle cx="140" cy="262" r="4.5" fill="#3A2A1A"/>
-  <circle cx="156" cy="262" r="4.5" fill="#3A2A1A"/>
-  <circle cx="141.5" cy="260.5" r="1.5" fill="white"/>
-  <circle cx="157.5" cy="260.5" r="1.5" fill="white"/>
-  <!-- smile -->
-  <path d="M140 272 Q148 278 156 272" stroke="#C06050" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-  <!-- blush -->
-  <ellipse cx="134" cy="269" rx="6" ry="3.5" fill="#FFB0C8" opacity="0.5"/>
-  <ellipse cx="162" cy="269" rx="6" ry="3.5" fill="#FFB0C8" opacity="0.5"/>
+  <!-- ── Family figures inside calendar body (y: 168–460) ── -->
 
-  <!-- PAVEL — right, light brown hair -->
-  <!-- body -->
-  <ellipse cx="364" cy="370" rx="28" ry="22" fill="#16A34A"/>
-  <!-- hair base -->
-  <ellipse cx="364" cy="248" rx="29" ry="22" fill="#B07840"/>
-  <!-- face -->
-  <circle cx="364" cy="265" r="28" fill="#FFD5A8"/>
-  <!-- hair top -->
-  <path d="M337 261 Q337 231 364 231 Q391 231 391 261 Q387 242 364 242 Q341 242 337 261Z" fill="#B07840"/>
-  <!-- eyes -->
-  <circle cx="356" cy="262" r="4.5" fill="#3A2A1A"/>
-  <circle cx="372" cy="262" r="4.5" fill="#3A2A1A"/>
-  <circle cx="357.5" cy="260.5" r="1.5" fill="white"/>
-  <circle cx="373.5" cy="260.5" r="1.5" fill="white"/>
-  <!-- brows -->
-  <path d="M352 254 Q356 251 360 254" stroke="#8B6035" stroke-width="2" stroke-linecap="round" fill="none"/>
-  <path d="M368 254 Q372 251 376 254" stroke="#8B6035" stroke-width="2" stroke-linecap="round" fill="none"/>
-  <!-- smile -->
-  <path d="M356 272 Q364 278 372 272" stroke="#C06050" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- === ELIŠKA — left === -->
+  <!-- Long blonde hair back -->
+  <ellipse cx="142" cy="330" rx="58" ry="72" fill="#F5C030"/>
+  <!-- Side strands -->
+  <rect x="80"  y="220" width="30" height="180" rx="15" fill="#F5C030"/>
+  <rect x="194" y="220" width="30" height="180" rx="15" fill="#F5C030"/>
+  <!-- Body (orange) -->
+  <ellipse cx="142" cy="455" rx="55" ry="38" fill="#EA580C"/>
+  <!-- Face -->
+  <circle cx="142" cy="295" r="60" fill="#FFD5A8"/>
+  <!-- Hair top over face -->
+  <ellipse cx="142" cy="240" rx="58" ry="38" fill="#F5C030"/>
+  <!-- Eyes -->
+  <circle cx="122" cy="288" r="10" fill="#3A2A1A"/>
+  <circle cx="162" cy="288" r="10" fill="#3A2A1A"/>
+  <circle cx="125"  cy="284" r="3.5" fill="white"/>
+  <circle cx="165"  cy="284" r="3.5" fill="white"/>
+  <!-- Smile -->
+  <path d="M120 314 Q142 332 164 314" stroke="#C06050" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <!-- Blush -->
+  <ellipse cx="108" cy="306" rx="14" ry="9" fill="#FFB0C8" opacity="0.5"/>
+  <ellipse cx="176" cy="306" rx="14" ry="9" fill="#FFB0C8" opacity="0.5"/>
 
-  <!-- FILIP — center, small child, dark yellow/blonde -->
-  <!-- body -->
-  <ellipse cx="256" cy="382" rx="22" ry="18" fill="#CA8A04"/>
-  <!-- hair -->
-  <ellipse cx="256" cy="308" rx="22" ry="16" fill="#D4A017"/>
-  <!-- face (smaller) -->
-  <circle cx="256" cy="320" r="22" fill="#FFD5A8"/>
-  <!-- hair top -->
-  <path d="M235 318 Q235 294 256 294 Q277 294 277 318 Q274 302 256 302 Q238 302 235 318Z" fill="#D4A017"/>
-  <!-- eyes -->
-  <circle cx="249" cy="318" r="3.8" fill="#3A2A1A"/>
-  <circle cx="263" cy="318" r="3.8" fill="#3A2A1A"/>
-  <circle cx="250.2" cy="316.8" r="1.2" fill="white"/>
-  <circle cx="264.2" cy="316.8" r="1.2" fill="white"/>
-  <!-- smile -->
-  <path d="M249 326 Q256 331 263 326" stroke="#C06050" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-  <!-- blush -->
-  <ellipse cx="243" cy="323" rx="5" ry="3" fill="#FFB0C8" opacity="0.45"/>
-  <ellipse cx="269" cy="323" rx="5" ry="3" fill="#FFB0C8" opacity="0.45"/>
+  <!-- === PAVEL — right === -->
+  <!-- Hair base -->
+  <ellipse cx="370" cy="258" rx="58" ry="44" fill="#B07840"/>
+  <!-- Body (green) -->
+  <ellipse cx="370" cy="455" rx="55" ry="38" fill="#16A34A"/>
+  <!-- Face -->
+  <circle cx="370" cy="295" r="60" fill="#FFD5A8"/>
+  <!-- Hair top -->
+  <path d="M312 286 Q312 228 370 228 Q428 228 428 286 Q420 248 370 246 Q320 248 312 286Z" fill="#B07840"/>
+  <!-- Eyes -->
+  <circle cx="350" cy="288" r="10" fill="#3A2A1A"/>
+  <circle cx="390" cy="288" r="10" fill="#3A2A1A"/>
+  <circle cx="353"  cy="284" r="3.5" fill="white"/>
+  <circle cx="393"  cy="284" r="3.5" fill="white"/>
+  <!-- Brows -->
+  <path d="M342 270 Q350 264 358 270" stroke="#8B6035" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M382 270 Q390 264 398 270" stroke="#8B6035" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- Smile -->
+  <path d="M348 314 Q370 332 392 314" stroke="#C06050" stroke-width="6" stroke-linecap="round" fill="none"/>
 
-  <!-- ── Small calendar icon at top center ── -->
-  <rect x="206" y="96" width="100" height="90" rx="14" fill="white" stroke="#E2E8F0" stroke-width="3"/>
-  <rect x="206" y="96" width="100" height="30" rx="14" fill="#16A34A"/>
-  <rect x="206" y="112" width="100" height="14" fill="#16A34A"/>
-  <!-- ring pegs -->
-  <rect x="228" y="84" width="9" height="22" rx="4.5" fill="#15803D"/>
-  <rect x="275" y="84" width="9" height="22" rx="4.5" fill="#15803D"/>
-  <!-- calendar dots grid -->
-  <circle cx="228" cy="152" r="7" fill="#DCFCE7"/>
-  <circle cx="256" cy="152" r="7" fill="#16A34A"/>
-  <circle cx="284" cy="152" r="7" fill="#DCFCE7"/>
-  <circle cx="228" cy="172" r="7" fill="#DCFCE7"/>
-  <circle cx="256" cy="172" r="7" fill="#DCFCE7"/>
-  <circle cx="284" cy="172" r="7" fill="#DCFCE7"/>
-  <!-- month text -->
-  <text x="256" y="111" text-anchor="middle" dominant-baseline="middle"
-        font-family="system-ui, sans-serif" font-weight="700" font-size="11" fill="white">VERNOUŠČÍ</text>
+  <!-- === FILIP — small child, center front === -->
+  <!-- Hair -->
+  <ellipse cx="256" cy="356" rx="48" ry="40" fill="#F0C430"/>
+  <!-- Body (yellow) -->
+  <ellipse cx="256" cy="458" rx="46" ry="34" fill="#CA8A04"/>
+  <!-- Face -->
+  <circle cx="256" cy="368" r="46" fill="#FFD5A8"/>
+  <!-- Hair top + tufts -->
+  <path d="M210 360 Q210 308 256 308 Q302 308 302 360 Q294 326 256 324 Q218 326 210 360Z" fill="#F0C430"/>
+  <ellipse cx="232" cy="318" rx="18" ry="14" fill="#F0C430"/>
+  <ellipse cx="280" cy="318" rx="18" ry="14" fill="#F0C430"/>
+  <ellipse cx="256" cy="310" rx="20" ry="14" fill="#F0C430"/>
+  <!-- Eyes — bigger for child -->
+  <circle cx="238" cy="360" r="12" fill="#3A2A1A"/>
+  <circle cx="274" cy="360" r="12" fill="#3A2A1A"/>
+  <circle cx="242" cy="355" r="4" fill="white"/>
+  <circle cx="278" cy="355" r="4" fill="white"/>
+  <!-- Big smile -->
+  <path d="M234 382 Q256 400 278 382" stroke="#C06050" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <!-- Rosy cheeks -->
+  <ellipse cx="220" cy="374" rx="16" ry="10" fill="#FFB0C8" opacity="0.6"/>
+  <ellipse cx="292" cy="374" rx="16" ry="10" fill="#FFB0C8" opacity="0.6"/>
+
+  <!-- Clip figures to calendar body bottom -->
+  <rect x="56" y="452" width="392" height="20" rx="0" fill="white"/>
+  <rect x="56" y="450" width="8"   height="14" fill="white"/>
+  <rect x="448" y="450" width="8"  height="14" fill="white"/>
+  <rect x="56" y="452" width="392" height="16" rx="8" fill="white"/>
 </svg>
