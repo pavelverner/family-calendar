@@ -135,23 +135,26 @@ export default function App() {
     <div className="app">
       {/* ── Header ── */}
       <header className="app-header">
-        <div className="header-top">
+        <div className="header-row1">
           <h1 className="app-title">📅 Rodinný Kalendář</h1>
-          <div className="header-right">
-            <div className="view-toggle">
-              <button className={view === 'month' ? 'active' : ''} onClick={() => setView('month')}>Měsíc</button>
-              <button className={view === 'week'  ? 'active' : ''} onClick={() => setView('week')}>Týden</button>
-            </div>
-            <nav className="month-nav">
-              <button onClick={navPrev}>‹</button>
-              <span>{navLabel()}</span>
-              <button onClick={navNext}>›</button>
-            </nav>
+          <div className="header-user">
             <div className="user-badge" style={{ '--c': MEMBERS[currentMemberKey].color }}>
               {MEMBERS[currentMemberKey].name[0]}
             </div>
             <button className="logout-btn" onClick={() => signOut(auth)} title="Odhlásit se">⎋</button>
           </div>
+        </div>
+        <div className="header-row2">
+          <div className="view-toggle">
+            <button className={view === 'month' ? 'active' : ''} onClick={() => setView('month')}>Měsíc</button>
+            <button className={view === 'week'  ? 'active' : ''} onClick={() => setView('week')}>Týden</button>
+          </div>
+          <nav className="month-nav">
+            <button onClick={navPrev}>‹</button>
+            <span>{navLabel()}</span>
+            <button onClick={navNext}>›</button>
+          </nav>
+        </div>
         </div>
         <div className="filter-chips">
           {Object.entries(MEMBERS).map(([key, m]) => (
