@@ -4,7 +4,7 @@ export function EliskaAvatar({ size = 48 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Orange shirt — drawn first so hair flows over it */}
-      <ellipse cx="24" cy="52" rx="22" ry="14" fill="#EA580C" />
+      <ellipse cx="24" cy="52" rx="22" ry="14" fill="#DC2626" />
 
       {/* Long flowing blonde hair — tapered paths, not rectangles */}
       <path d="M10 14 Q5 28 5 40 Q7 46 13 44 Q11 30 12 14Z" fill="#F5C030" />
