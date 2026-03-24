@@ -17,3 +17,19 @@ export const MONTHS_CZ = [
   'Leden','Únor','Březen','Duben','Květen','Červen',
   'Červenec','Srpen','Září','Říjen','Listopad','Prosinec',
 ];
+
+export const CATEGORIES = {
+  none:   { label: 'Obecné',  icon: '📌' },
+  prace:  { label: 'Práce',   icon: '💼' },
+  skola:  { label: 'Škola',   icon: '🎒' },
+  sport:  { label: 'Sport',   icon: '🏃' },
+  doktor: { label: 'Doktor',  icon: '🏥' },
+  rodina: { label: 'Rodina',  icon: '🏠' },
+  zabava: { label: 'Zábava',  icon: '🎉' },
+};
+
+export const REPEAT_OPTIONS = [
+  { value: 'none',    label: 'Neopakovat' },
+  { value: 'weekly',  label: 'Každý týden' },
+  { value: 'monthly', label: 'Každý měsíc' },
+];
