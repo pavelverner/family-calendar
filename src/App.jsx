@@ -430,9 +430,16 @@ function UpcomingEvents({ events, filters, onOpenDay }) {
     const d = new Date(); d.setDate(d.getDate() + i); return toDateStr(d);
   });
 
+  const nowTime = new Date().toTimeString().slice(0, 5); // HH:MM
+
   const upcoming = days.flatMap(ds =>
     events
-      .filter(e => isEventOnDate(e, ds) && filters.has(e.member))
+      .filter(e => {
+        if (!isEventOnDate(e, ds) || !filters.has(e.member)) return false;
+        // hide past timed events on today
+        if (ds === today && e.time && e.time < nowTime) return false;
+        return true;
+      })
       .map(e => ({ ...e, ds }))
   ).sort((a, b) => a.ds !== b.ds ? a.ds.localeCompare(b.ds) : (a.time || '').localeCompare(b.time || ''));
 
@@ -692,7 +699,7 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
 
               {useTime && (
                 <div className="duration-row">
-                  {[15, 30, 60, 90, 120, 180].map(m => (
+                  {[30, 60, 90, 120, 180].map(m => (
                     <button
                       key={m}
                       className={`duration-btn ${duration === m ? 'sel' : ''}`}
@@ -701,6 +708,12 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
                       {m < 60 ? `${m} min` : `${m / 60} hod`}
                     </button>
                   ))}
+                  <button
+                    className={`duration-btn ${duration === 0 ? 'sel' : ''}`}
+                    onClick={() => setDuration(0)}
+                  >
+                    Celý den
+                  </button>
                 </div>
               )}
 
