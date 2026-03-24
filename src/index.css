@@ -126,19 +126,15 @@ input  { font: inherit; }
 .person-btn:not(.sel):hover { border-color: var(--c); background: var(--l); }
 
 .person-avatar {
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: var(--l);
-  color: var(--c);
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  font-weight: 800;
-  border: 2px solid var(--c);
 }
-.person-btn.sel .person-avatar { background: var(--c); color: #fff; }
+.person-btn.sel .person-avatar { filter: drop-shadow(0 0 4px var(--c)); }
 
 .login-form {
   width: 100%;
@@ -243,7 +239,7 @@ input  { font: inherit; }
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: var(--c);
+  background: var(--surface-2);
   color: #fff;
   display: flex;
   align-items: center;
@@ -251,6 +247,7 @@ input  { font: inherit; }
   font-size: .85rem;
   font-weight: 800;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .logout-btn {
@@ -631,15 +628,17 @@ input  { font: inherit; }
 .ev-name { font-size: .88rem; color: #1E293B; font-weight: 500; }
 .ev-actions { display: flex; gap: 2px; flex-shrink: 0; }
 .icon-btn {
-  width: 32px; height: 32px;
-  border-radius: 8px;
-  color: #CBD5E1;
-  font-size: .85rem;
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  color: #64748B;
+  background: #F1F5F9;
+  font-size: 1rem;
   display: flex; align-items: center; justify-content: center;
   transition: all .12s;
 }
-.icon-btn:hover     { background: #F1F5F9; color: #475569; }
-.icon-btn.del:hover { background: #FEE2E2; color: #DC2626; }
+.icon-btn:hover     { background: #E2E8F0; color: #1E293B; }
+.icon-btn.del       { color: #DC2626; background: #FEE2E2; }
+.icon-btn.del:hover { background: #FECACA; color: #B91C1C; }
 
 .no-events { padding: 8px 16px 12px; color: #CBD5E1; font-size: .85rem; text-align: center; }
 
@@ -1021,8 +1020,10 @@ input  { font: inherit; }
 [data-theme="dark"] .event-row { background: var(--surface); box-shadow: 0 1px 4px var(--shadow); }
 [data-theme="dark"] .ev-name { color: var(--text-1); }
 [data-theme="dark"] .ev-badge { background: var(--surface-2); color: var(--text-2); }
-[data-theme="dark"] .icon-btn { color: var(--border-2); }
-[data-theme="dark"] .icon-btn:hover { background: var(--surface-2); color: var(--text-2); }
+[data-theme="dark"] .icon-btn { color: var(--text-2); background: var(--surface-2); }
+[data-theme="dark"] .icon-btn:hover { background: var(--border); color: var(--text-1); }
+[data-theme="dark"] .icon-btn.del { color: #FCA5A5; background: rgba(220,38,38,.25); }
+[data-theme="dark"] .icon-btn.del:hover { background: rgba(220,38,38,.4); color: #FCA5A5; }
 [data-theme="dark"] .no-events { color: var(--border-2); }
 [data-theme="dark"] .btn-new-event { background: var(--surface); color: var(--text-2); border-color: var(--border); }
 [data-theme="dark"] .btn-new-event:hover { background: var(--surface-2); border-color: var(--border-2); }

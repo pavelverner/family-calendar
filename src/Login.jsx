@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from './firebase';
 import { MEMBERS, USER_EMAILS } from './constants';
+import { EliskaAvatar, PavelAvatar } from './Avatars';
 
 const LOGIN_USERS = ['pavel', 'eliska'];
 
@@ -40,7 +41,9 @@ export default function Login() {
                 style={{ '--c': m.color, '--l': m.light }}
                 onClick={() => { setSelected(key); setPassword(''); setError(''); }}
               >
-                <span className="person-avatar">{m.name[0]}</span>
+                <span className="person-avatar">
+                  {key === 'eliska' ? <EliskaAvatar size={52} /> : <PavelAvatar size={52} />}
+                </span>
                 {m.name}
               </button>
             );

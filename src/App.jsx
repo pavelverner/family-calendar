@@ -32,6 +32,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { db, auth } from './firebase';
 import { MEMBERS, DAYS_CZ, MONTHS_CZ, CATEGORIES, REPEAT_OPTIONS, USER_EMAILS } from './constants';
 import Login from './Login';
+import { EliskaAvatar, PavelAvatar } from './Avatars';
 
 const EMAIL_TO_KEY = Object.fromEntries(
   Object.entries(USER_EMAILS).map(([k, v]) => [v, k])
@@ -165,8 +166,10 @@ export default function App() {
         <div className="header-row1">
           <h1 className="app-title">📅 Rodinný Kalendář</h1>
           <div className="header-user">
-            <div className="user-badge" style={{ '--c': MEMBERS[currentMemberKey].color }}>
-              {MEMBERS[currentMemberKey].name[0]}
+            <div className="user-badge">
+              {currentMemberKey === 'eliska' ? <EliskaAvatar size={30} /> :
+               currentMemberKey === 'pavel'  ? <PavelAvatar  size={30} /> :
+               <span style={{ color: '#fff', fontWeight: 800, fontSize: '.85rem' }}>{MEMBERS[currentMemberKey].name[0]}</span>}
             </div>
             <button className="theme-btn" onClick={() => setDark(d => !d)} title="Tmavý režim">
               {dark ? '☀️' : '🌙'}
@@ -716,7 +719,7 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
 
               {useTime && (
                 <div className="duration-row">
-                  {[30, 60, 90, 120, 180].map(m => (
+                  {[30, 60, 120, 240].map(m => (
                     <button
                       key={m}
                       className={`duration-btn ${duration === m ? 'sel' : ''}`}
