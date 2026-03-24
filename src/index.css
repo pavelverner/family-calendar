@@ -672,9 +672,9 @@ input  { font: inherit; }
 /* Wizard footer — sticky above keyboard */
 .wizard-footer {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px env(safe-area-inset-bottom, 20px);
+  padding: 14px 16px max(env(safe-area-inset-bottom), 20px);
   background: #fff; box-shadow: 0 -1px 0 #F1F5F9;
-  margin-top: 12px; position: sticky; bottom: 0; z-index: 1;
+  margin-top: 16px; position: sticky; bottom: 0; z-index: 1;
 }
 .wizard-dots { display: flex; gap: 5px; }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: #E2E8F0; transition: all .2s; }
