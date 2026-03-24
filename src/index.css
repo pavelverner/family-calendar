@@ -487,14 +487,14 @@ input  { font: inherit; }
   height: 3px;
   background: #CBD5E1;
   border-radius: 2px;
-  margin: 10px auto 0;
+  margin: 14px auto 0;
 }
 
 .modal-hdr {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 18px 14px;
+  padding: 14px 18px 14px;
 }
 .modal-hdr h2 {
   font-size: 1.05rem;
@@ -706,8 +706,21 @@ input  { font: inherit; }
 .repeat-btn.sel              { background: #EFF6FF; color: #2563EB; box-shadow: 0 0 0 2px #BFDBFE; }
 .repeat-btn:not(.sel):hover  { background: #E2E8F0; color: #475569; }
 
-/* Actions */
-.form-actions { display: flex; gap: 8px; align-items: center; padding-top: 2px; }
+/* Actions — sticky above keyboard */
+.form-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding: 10px 0 env(safe-area-inset-bottom, 12px);
+  margin: 4px -16px -32px;
+  padding-left: 16px;
+  padding-right: 16px;
+  box-shadow: 0 -1px 0 #F1F5F9;
+  z-index: 1;
+}
 
 .btn-cancel {
   padding: 12px 16px;
