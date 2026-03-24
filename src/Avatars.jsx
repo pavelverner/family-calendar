@@ -28,13 +28,13 @@ export function EliskaAvatar({ size = 48 }) {
       <path d="M27 29 Q32 25 37 29" stroke="#92700A" strokeWidth="2.2" strokeLinecap="round" fill="none" />
       <path d="M43 29 Q48 25 53 29" stroke="#92700A" strokeWidth="2.2" strokeLinecap="round" fill="none" />
 
-      {/* Eyes — friendly size */}
-      <circle cx="32" cy="36" r="5" fill="#4A7C59" />
-      <circle cx="48" cy="36" r="5" fill="#4A7C59" />
-      <circle cx="32" cy="36" r="3" fill="#1A1A1A" />
-      <circle cx="48" cy="36" r="3" fill="#1A1A1A" />
-      <circle cx="33.5" cy="34.5" r="1.2" fill="white" />
-      <circle cx="49.5" cy="34.5" r="1.2" fill="white" />
+      {/* Eyes */}
+      <circle cx="32" cy="36" r="3.8" fill="#4A7C59" />
+      <circle cx="48" cy="36" r="3.8" fill="#4A7C59" />
+      <circle cx="32" cy="36" r="2.2" fill="#1A1A1A" />
+      <circle cx="48" cy="36" r="2.2" fill="#1A1A1A" />
+      <circle cx="33.2" cy="34.8" r="0.9" fill="white" />
+      <circle cx="49.2" cy="34.8" r="0.9" fill="white" />
 
       {/* Smile */}
       <path d="M30 46 Q40 54 50 46" stroke="#C06050" strokeWidth="3" strokeLinecap="round" fill="none" />
