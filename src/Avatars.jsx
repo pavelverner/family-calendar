@@ -3,37 +3,47 @@
 export function EliskaAvatar({ size = 48 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Orange shirt — drawn first so hair flows over it */}
-      <ellipse cx="24" cy="52" rx="22" ry="14" fill="#DC2626" />
+      {/* Light blue shirt */}
+      <ellipse cx="24" cy="52" rx="22" ry="14" fill="#60A5FA" />
+      {/* White Peter Pan collar */}
+      <path d="M15 41 Q24 47 33 41 Q29 50 24 50 Q19 50 15 41Z" fill="white" />
 
-      {/* Long flowing blonde hair — tapered paths, not rectangles */}
-      <path d="M10 14 Q5 28 5 40 Q7 46 13 44 Q11 30 12 14Z" fill="#F5C030" />
-      <path d="M38 14 Q43 28 43 40 Q41 46 35 44 Q37 30 36 14Z" fill="#F5C030" />
-      {/* Hair center back (between strands) */}
-      <ellipse cx="24" cy="43" rx="11" ry="5" fill="#F5C030" />
+      {/* Long straight blonde hair — tapered side strands */}
+      <path d="M9 13 Q5 29 6 42 Q9 46 14 44 Q11 28 12 13Z" fill="#EAB308" />
+      <path d="M39 13 Q43 29 42 42 Q39 46 34 44 Q37 28 36 13Z" fill="#EAB308" />
+      {/* Hair back center */}
+      <ellipse cx="24" cy="43" rx="10" ry="4" fill="#EAB308" />
 
       {/* Face */}
-      <circle cx="24" cy="22" r="13" fill="#FFD5A8" />
+      <circle cx="24" cy="21" r="13" fill="#FFD5A8" />
 
-      {/* Hair top — crowns the head */}
-      <path d="M11 18 Q11 6 24 6 Q37 6 37 18 Q33 9 24 9 Q15 9 11 18Z" fill="#F5C030" />
+      {/* Hair top — smooth cap */}
+      <path d="M11 17 Q11 5 24 5 Q37 5 37 17 Q33 7 24 7 Q15 7 11 17Z" fill="#EAB308" />
 
       {/* Ears */}
-      <ellipse cx="11" cy="22" rx="2.5" ry="3" fill="#FFD5A8" />
-      <ellipse cx="37" cy="22" rx="2.5" ry="3" fill="#FFD5A8" />
+      <ellipse cx="11" cy="21" rx="2.5" ry="3" fill="#FBBF8C" />
+      <ellipse cx="37" cy="21" rx="2.5" ry="3" fill="#FBBF8C" />
 
-      {/* Eyes */}
-      <circle cx="19.5" cy="20" r="2.4" fill="#3A2A1A" />
-      <circle cx="28.5" cy="20" r="2.4" fill="#3A2A1A" />
-      <circle cx="20.3" cy="19.2" r="0.8" fill="white" />
-      <circle cx="29.3" cy="19.2" r="0.8" fill="white" />
+      {/* Arched eyebrows */}
+      <path d="M16.5 14 Q19.5 11.8 22 14" stroke="#92700A" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+      <path d="M26 14 Q28.5 11.8 31.5 14" stroke="#92700A" strokeWidth="1.4" strokeLinecap="round" fill="none" />
 
-      {/* Smile */}
-      <path d="M19 27 Q24 31.5 29 27" stroke="#C06050" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+      {/* Eyes — large green iris */}
+      <circle cx="19.5" cy="19.5" r="3.4" fill="#16803D" />
+      <circle cx="28.5" cy="19.5" r="3.4" fill="#16803D" />
+      {/* Pupils */}
+      <circle cx="19.5" cy="19.5" r="1.9" fill="#0F1A0F" />
+      <circle cx="28.5" cy="19.5" r="1.9" fill="#0F1A0F" />
+      {/* Eye highlights */}
+      <circle cx="20.6" cy="18.4" r="1" fill="white" />
+      <circle cx="29.6" cy="18.4" r="1" fill="white" />
+
+      {/* Wide happy smile */}
+      <path d="M18 26.5 Q24 32 30 26.5" stroke="#C06050" strokeWidth="2" strokeLinecap="round" fill="none" />
 
       {/* Blush */}
-      <ellipse cx="15" cy="23" rx="3" ry="2" fill="#FFB0C8" opacity="0.55" />
-      <ellipse cx="33" cy="23" rx="3" ry="2" fill="#FFB0C8" opacity="0.55" />
+      <ellipse cx="14.5" cy="23" rx="3.5" ry="2" fill="#FFB0C8" opacity="0.6" />
+      <ellipse cx="33.5" cy="23" rx="3.5" ry="2" fill="#FFB0C8" opacity="0.6" />
     </svg>
   );
 }
