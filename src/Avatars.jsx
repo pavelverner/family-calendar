@@ -3,28 +3,37 @@
 export function EliskaAvatar({ size = 48 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Long side hair strands — behind face */}
-      <rect x="3"  y="12" width="12" height="36" rx="6" fill="#F5C030" />
-      <rect x="33" y="12" width="12" height="36" rx="6" fill="#F5C030" />
-      {/* Hair bottom (flows below chin) */}
-      <ellipse cx="24" cy="45" rx="15" ry="6" fill="#F5C030" />
-      {/* Face — centered and prominent */}
-      <circle cx="24" cy="23" r="14" fill="#FFD5A8" />
-      {/* Hair top — thin cap, just crowns the head */}
-      <path d="M10 19 Q10 5 24 5 Q38 5 38 19 Q34 10 24 10 Q14 10 10 19Z" fill="#F5C030" />
+      {/* Orange shirt — drawn first so hair flows over it */}
+      <ellipse cx="24" cy="52" rx="22" ry="14" fill="#EA580C" />
+
+      {/* Long flowing blonde hair — tapered paths, not rectangles */}
+      <path d="M10 14 Q5 28 5 40 Q7 46 13 44 Q11 30 12 14Z" fill="#F5C030" />
+      <path d="M38 14 Q43 28 43 40 Q41 46 35 44 Q37 30 36 14Z" fill="#F5C030" />
+      {/* Hair center back (between strands) */}
+      <ellipse cx="24" cy="43" rx="11" ry="5" fill="#F5C030" />
+
+      {/* Face */}
+      <circle cx="24" cy="22" r="13" fill="#FFD5A8" />
+
+      {/* Hair top — crowns the head */}
+      <path d="M11 18 Q11 6 24 6 Q37 6 37 18 Q33 9 24 9 Q15 9 11 18Z" fill="#F5C030" />
+
       {/* Ears */}
-      <ellipse cx="10" cy="23" rx="2.5" ry="3" fill="#FFD5A8" />
-      <ellipse cx="38" cy="23" rx="2.5" ry="3" fill="#FFD5A8" />
+      <ellipse cx="11" cy="22" rx="2.5" ry="3" fill="#FFD5A8" />
+      <ellipse cx="37" cy="22" rx="2.5" ry="3" fill="#FFD5A8" />
+
       {/* Eyes */}
-      <circle cx="19.5" cy="21" r="2.5" fill="#3A2A1A" />
-      <circle cx="28.5" cy="21" r="2.5" fill="#3A2A1A" />
-      <circle cx="20.3" cy="20.2" r="0.8" fill="white" />
-      <circle cx="29.3" cy="20.2" r="0.8" fill="white" />
+      <circle cx="19.5" cy="20" r="2.4" fill="#3A2A1A" />
+      <circle cx="28.5" cy="20" r="2.4" fill="#3A2A1A" />
+      <circle cx="20.3" cy="19.2" r="0.8" fill="white" />
+      <circle cx="29.3" cy="19.2" r="0.8" fill="white" />
+
       {/* Smile */}
-      <path d="M19 28 Q24 33 29 28" stroke="#C06050" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+      <path d="M19 27 Q24 31.5 29 27" stroke="#C06050" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+
       {/* Blush */}
-      <ellipse cx="15" cy="24" rx="3" ry="2" fill="#FFB0C8" opacity="0.55" />
-      <ellipse cx="33" cy="24" rx="3" ry="2" fill="#FFB0C8" opacity="0.55" />
+      <ellipse cx="15" cy="23" rx="3" ry="2" fill="#FFB0C8" opacity="0.55" />
+      <ellipse cx="33" cy="23" rx="3" ry="2" fill="#FFB0C8" opacity="0.55" />
     </svg>
   );
 }
