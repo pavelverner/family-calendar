@@ -457,51 +457,62 @@ function UpcomingEvents({ events, filters, onOpenDay }) {
   );
 }
 
-// ── Day Modal ─────────────────────────────────────────────────────────────────
+// ── Day Modal (wizard) ────────────────────────────────────────────────────────
 
 function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, onUpdate, onAddTemplate, onDeleteTemplate, onClose }) {
-  const [title,    setTitle]    = useState('');
+  // mode: 'list' | 'step1' | 'step2'
+  const [mode,     setMode]     = useState('list');
+  const [editId,   setEditId]   = useState(null);
+  const [saving,   setSaving]   = useState(false);
+
+  // Form state
   const [member,   setMember]   = useState(defaultMember);
   const [category, setCategory] = useState('none');
-  const [note,     setNote]     = useState('');
+  const [title,    setTitle]    = useState('');
+  const [date,     setDate]     = useState(dateStr);
   const [useTime,  setUseTime]  = useState(false);
   const [time,     setTime]     = useState('09:00');
   const [repeat,   setRepeat]   = useState('none');
-  const [date,     setDate]     = useState(dateStr);
-  const [saving,   setSaving]   = useState(false);
-  const [editId,   setEditId]   = useState(null);
+  const [note,     setNote]     = useState('');
+  const [showNote, setShowNote] = useState(false);
 
   const sorted = [...events].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-
-  const displayDate = new Date(date + 'T12:00:00');
+  const displayDate = new Date(dateStr + 'T12:00:00');
   const dateLabel = displayDate.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' });
 
-  function applyTemplate(t) {
-    setTitle(t.title); setMember(t.member); setCategory(t.category || 'none');
-    setNote(t.note || ''); setRepeat(t.repeat || 'none');
-    if (t.time) { setUseTime(true); setTime(t.time); } else setUseTime(false);
+  function resetForm() {
+    setMember(defaultMember); setCategory('none'); setTitle('');
+    setDate(dateStr); setUseTime(false); setTime('09:00');
+    setRepeat('none'); setNote(''); setShowNote(false); setEditId(null);
   }
+
+  function openAdd() { resetForm(); setMode('step1'); }
 
   function startEdit(ev) {
-    setEditId(ev.id); setTitle(ev.title); setMember(ev.member);
-    setCategory(ev.category || 'none'); setNote(ev.note || '');
-    setRepeat(ev.repeat || 'none'); setDate(ev.date);
-    if (ev.time) { setUseTime(true); setTime(ev.time); } else setUseTime(false);
+    setEditId(ev.id); setMember(ev.member); setCategory(ev.category || 'none');
+    setTitle(ev.title); setDate(ev.date); setRepeat(ev.repeat || 'none');
+    setNote(ev.note || ''); setShowNote(!!ev.note);
+    if (ev.time) { setUseTime(true); setTime(ev.time); } else { setUseTime(false); }
+    setMode('step1');
   }
 
-  function resetForm() {
-    setEditId(null); setTitle(''); setMember(defaultMember);
-    setCategory('none'); setNote(''); setRepeat('none');
-    setUseTime(false); setTime('09:00'); setDate(dateStr);
+  async function applyTemplate(t) {
+    const data = {
+      title: t.title, member: t.member, category: t.category || 'none',
+      note: t.note || '', date: dateStr,
+      time: t.time || null, repeat: t.repeat || 'none',
+    };
+    await onAdd(data);
   }
 
   async function handleSave() {
     if (!title.trim()) return;
     setSaving(true);
     const data = { title: title.trim(), member, category, note, date, time: useTime ? time : null, repeat };
-    if (editId) { await onUpdate(editId, data); }
-    else        { await onAdd(data); }
+    if (editId) await onUpdate(editId, data);
+    else        await onAdd(data);
     resetForm();
+    setMode('list');
     setSaving(false);
   }
 
@@ -510,141 +521,205 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
     await onAddTemplate({ title: title.trim(), member, category, note, time: useTime ? time : null, repeat });
   }
 
+  // ── Header ──
+  const hdrTitle = mode === 'list' ? dateLabel
+    : mode === 'step1' ? (editId ? 'Upravit událost' : 'Nová událost')
+    : editId ? 'Upravit událost' : 'Nová událost';
+
+  const hdrLeft = mode !== 'list' && (
+    <button className="back-btn" onClick={() => mode === 'step2' ? setMode('step1') : setMode('list')}>
+      ←
+    </button>
+  );
+
+  // ── Render ──
   return (
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
+
+        {/* Handle + header — always visible */}
         <div className="modal-hdr">
-          <h2>{dateLabel}</h2>
+          <div className="modal-hdr-left">
+            {hdrLeft}
+            <h2>{hdrTitle}</h2>
+          </div>
           <button className="close-btn" onClick={onClose}>✕</button>
         </div>
 
-        {/* Templates */}
-        {templates.length > 0 && (
-          <div className="templates-section">
-            <p className="section-label">Rychlé přidání</p>
-            <div className="template-chips">
-              {templates.map(t => (
-                <div key={t.id} className="tmpl-wrap">
-                  <button
-                    className="tmpl-chip"
-                    style={{ '--c': MEMBERS[t.member].color, '--l': MEMBERS[t.member].light }}
-                    onClick={() => applyTemplate(t)}
-                  >
-                    {CATEGORIES[t.category || 'none']?.icon} {t.title}
-                    {t.time && <span className="tmpl-time"> {t.time}</span>}
-                  </button>
-                  <button className="tmpl-del" onClick={() => onDeleteTemplate(t.id)}>✕</button>
+        {/* ── LIST mode ── */}
+        {mode === 'list' && (
+          <div className="modal-list">
+            {/* Templates */}
+            {templates.length > 0 && (
+              <div className="templates-section">
+                <p className="section-label">Rychlé přidání</p>
+                <div className="template-chips">
+                  {templates.map(t => (
+                    <div key={t.id} className="tmpl-wrap">
+                      <button
+                        className="tmpl-chip"
+                        style={{ '--c': MEMBERS[t.member].color, '--l': MEMBERS[t.member].light }}
+                        onClick={() => applyTemplate(t)}
+                      >
+                        {CATEGORIES[t.category || 'none']?.icon} {t.title}
+                        {t.time && <span className="tmpl-time"> {t.time}</span>}
+                      </button>
+                      <button className="tmpl-del" onClick={() => onDeleteTemplate(t.id)}>✕</button>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+            )}
+
+            {/* Events */}
+            {sorted.length > 0 && (
+              <div className="event-list">
+                {templates.length > 0 && <p className="section-label">Události</p>}
+                {sorted.map(ev => (
+                  <div key={ev.id} className="event-row" style={{ borderLeftColor: MEMBERS[ev.member].color }}>
+                    <div className="event-info">
+                      <span className="ev-cat-icon">{CATEGORIES[ev.category || 'none']?.icon}</span>
+                      <span className="ev-member" style={{ color: MEMBERS[ev.member].color }}>{MEMBERS[ev.member].name}</span>
+                      {ev.time && <span className="ev-badge">{ev.time}</span>}
+                      {ev.repeat && ev.repeat !== 'none' && <span className="ev-badge">🔁</span>}
+                      <span className="ev-name">{ev.title}</span>
+                      {ev.note && <span className="ev-note-preview">{ev.note}</span>}
+                    </div>
+                    <div className="ev-actions">
+                      <button className="icon-btn" onClick={() => startEdit(ev)}>✎</button>
+                      <button className="icon-btn del" onClick={() => onDelete(ev.id)}>✕</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {sorted.length === 0 && templates.length === 0 && (
+              <p className="no-events">Žádné události tento den.</p>
+            )}
+
+            {/* Add button */}
+            <div className="list-footer">
+              <button className="btn-new-event" onClick={openAdd}>
+                + Přidat událost
+              </button>
             </div>
           </div>
         )}
 
-        {/* Existing events */}
-        {sorted.length > 0 && (
-          <div className="event-list">
-            <p className="section-label">Události</p>
-            {sorted.map(ev => (
-              <div key={ev.id} className="event-row" style={{ borderLeftColor: MEMBERS[ev.member].color }}>
-                <div className="event-info">
-                  <span className="ev-cat-icon">{CATEGORIES[ev.category || 'none']?.icon}</span>
-                  <span className="ev-member" style={{ color: MEMBERS[ev.member].color }}>{MEMBERS[ev.member].name}</span>
-                  {ev.time && <span className="ev-badge">{ev.time}</span>}
-                  {ev.repeat && ev.repeat !== 'none' && <span className="ev-badge">🔁</span>}
-                  <span className="ev-name">{ev.title}</span>
-                  {ev.note && <span className="ev-note-preview">{ev.note}</span>}
-                </div>
-                <div className="ev-actions">
-                  <button className="icon-btn" onClick={() => startEdit(ev)}>✎</button>
-                  <button className="icon-btn del" onClick={() => onDelete(ev.id)}>✕</button>
-                </div>
+        {/* ── STEP 1: Kdo + Kategorie ── */}
+        {mode === 'step1' && (
+          <div className="wizard-step">
+            <div className="wizard-body">
+              <p className="step-label">Pro koho?</p>
+              <div className="member-grid">
+                {Object.entries(MEMBERS).map(([key, m]) => (
+                  <button
+                    key={key}
+                    className={`mem-card ${member === key ? 'sel' : ''}`}
+                    style={{ '--c': m.color, '--l': m.light }}
+                    onClick={() => setMember(key)}
+                  >
+                    <span className="mem-card-avatar">{m.name[0]}</span>
+                    <span className="mem-card-name">{m.name}</span>
+                  </button>
+                ))}
               </div>
-            ))}
+
+              <p className="step-label" style={{ marginTop: 20 }}>Kategorie</p>
+              <div className="cat-grid">
+                {Object.entries(CATEGORIES).map(([key, c]) => (
+                  <button
+                    key={key}
+                    className={`cat-card ${category === key ? 'sel' : ''}`}
+                    onClick={() => setCategory(key)}
+                  >
+                    <span className="cat-card-icon">{c.icon}</span>
+                    <span className="cat-card-label">{c.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="wizard-footer">
+              <div className="wizard-dots">
+                <span className="dot active" /><span className="dot" />
+              </div>
+              <button className="btn-next" style={{ '--c': MEMBERS[member].color }} onClick={() => setMode('step2')}>
+                Dále →
+              </button>
+            </div>
           </div>
         )}
 
-        {sorted.length === 0 && templates.length === 0 && (
-          <p className="no-events">Žádné události tento den.</p>
+        {/* ── STEP 2: Co + Kdy ── */}
+        {mode === 'step2' && (
+          <div className="wizard-step">
+            <div className="wizard-body">
+              <input
+                className="form-input title-inp"
+                type="text"
+                placeholder="Název události…"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                autoFocus
+              />
+
+              <input className="form-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
+
+              <div className="time-row">
+                <label className="time-label">
+                  <input type="checkbox" checked={useTime} onChange={e => setUseTime(e.target.checked)} />
+                  Konkrétní čas
+                </label>
+                {useTime && (
+                  <input className="form-input time-inp" type="time" step="900" value={time} onChange={e => setTime(e.target.value)} />
+                )}
+              </div>
+
+              <div className="repeat-row">
+                {REPEAT_OPTIONS.map(o => (
+                  <button key={o.value} className={`repeat-btn ${repeat === o.value ? 'sel' : ''}`}
+                    onClick={() => setRepeat(o.value)}>
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+
+              {!showNote ? (
+                <button className="btn-add-note" onClick={() => setShowNote(true)}>+ Přidat poznámku</button>
+              ) : (
+                <textarea
+                  className="form-input note-inp"
+                  placeholder="Poznámka…"
+                  value={note}
+                  onChange={e => setNote(e.target.value)}
+                  rows={2}
+                  autoFocus
+                />
+              )}
+            </div>
+
+            <div className="wizard-footer">
+              <div className="wizard-dots">
+                <span className="dot" /><span className="dot active" />
+              </div>
+              <div className="wizard-actions">
+                {!editId && title.trim() && (
+                  <button className="btn-tmpl" onClick={handleSaveTemplate}>☆</button>
+                )}
+                <button
+                  className="btn-add"
+                  style={{ '--c': MEMBERS[member].color }}
+                  onClick={handleSave}
+                  disabled={!title.trim() || saving}
+                >
+                  {saving ? '…' : editId ? 'Uložit' : 'Přidat'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
-
-        {/* Form */}
-        <div className="add-form">
-          <h3>{editId ? 'Upravit událost' : 'Přidat událost'}</h3>
-
-          {/* Member */}
-          <div className="member-row">
-            {Object.entries(MEMBERS).map(([key, m]) => (
-              <button key={key} className={`mem-btn ${member === key ? 'sel' : ''}`}
-                style={{ '--c': m.color, '--l': m.light }} onClick={() => setMember(key)}>
-                {m.name}
-              </button>
-            ))}
-          </div>
-
-          {/* Category */}
-          <div className="cat-row">
-            {Object.entries(CATEGORIES).map(([key, c]) => (
-              <button key={key} className={`cat-btn ${category === key ? 'sel' : ''}`}
-                onClick={() => setCategory(key)} title={c.label}>
-                {c.icon}
-              </button>
-            ))}
-          </div>
-
-          <input className="form-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
-
-          <input
-            className="form-input title-inp"
-            type="text"
-            placeholder="Název události…"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSave()}
-            autoFocus
-          />
-
-          <textarea
-            className="form-input note-inp"
-            placeholder="Poznámka (volitelné)…"
-            value={note}
-            onChange={e => setNote(e.target.value)}
-            rows={2}
-          />
-
-          <div className="time-row">
-            <label className="time-label">
-              <input type="checkbox" checked={useTime} onChange={e => setUseTime(e.target.checked)} />
-              Konkrétní čas
-            </label>
-            {useTime && (
-              <input className="form-input time-inp" type="time" step="900" value={time} onChange={e => setTime(e.target.value)} />
-            )}
-          </div>
-
-          {/* Repeat */}
-          <div className="repeat-row">
-            {REPEAT_OPTIONS.map(o => (
-              <button key={o.value} className={`repeat-btn ${repeat === o.value ? 'sel' : ''}`}
-                onClick={() => setRepeat(o.value)}>
-                {o.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="form-actions">
-            {editId ? (
-              <button className="btn-cancel" onClick={resetForm}>Zrušit</button>
-            ) : (
-              title.trim() && (
-                <button className="btn-tmpl" onClick={handleSaveTemplate} title="Uložit jako šablonu">☆ Šablona</button>
-              )
-            )}
-            <button className="btn-add" style={{ '--c': MEMBERS[member].color }}
-              onClick={handleSave} disabled={!title.trim() || saving}>
-              {saving ? '…' : editId ? 'Uložit' : 'Přidat'}
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
