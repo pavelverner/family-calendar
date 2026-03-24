@@ -28,7 +28,7 @@ export default function Login() {
     <div className="login-wrap">
       <div className="login-card">
         <div className="login-icon">📅</div>
-        <h1 className="login-title">Rodinný Kalendář</h1>
+        <h1 className="login-title">Vernouščí Kalendář</h1>
         <p className="login-sub">Kdo jsi?</p>
 
         <div className="login-persons">

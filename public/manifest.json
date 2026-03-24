@@ -1,0 +1,17 @@
+{
+  "name": "Vernouščí Kalendář",
+  "short_name": "Kalendář",
+  "description": "Rodinný kalendář rodiny Vernerů",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#16A34A",
+  "theme_color": "#16A34A",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

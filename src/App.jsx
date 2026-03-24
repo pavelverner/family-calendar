@@ -164,7 +164,7 @@ export default function App() {
       {/* ── Header ── */}
       <header className="app-header">
         <div className="header-row1">
-          <h1 className="app-title">📅 Rodinný Kalendář</h1>
+          <h1 className="app-title">📅 Vernouščí Kalendář</h1>
           <div className="header-user">
             <div className="user-badge">
               {currentMemberKey === 'eliska' ? <EliskaAvatar size={30} /> :

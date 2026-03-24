@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Full-bleed background for maskable (Android circle crop) -->
+  <rect width="512" height="512" fill="#16A34A"/>
+
+  <!-- Subtle radial gradient overlay -->
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#22C55E" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#14532D" stop-opacity="0.4"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+
+  <!-- Calendar card — centered in safe zone -->
+  <rect x="104" y="112" width="304" height="288" rx="32" fill="white" opacity="0.97"/>
+
+  <!-- Calendar top bar -->
+  <rect x="104" y="112" width="304" height="88" rx="32" fill="#15803D"/>
+  <rect x="104" y="168" width="304" height="32" fill="#15803D"/>
+
+  <!-- Binding rings -->
+  <rect x="178" y="88" width="24" height="60" rx="12" fill="#14532D"/>
+  <rect x="310" y="88" width="24" height="60" rx="12" fill="#14532D"/>
+
+  <!-- Month text (abstract white lines) -->
+  <rect x="148" y="138" width="96" height="11" rx="5.5" fill="white" opacity="0.9"/>
+  <rect x="316" y="138" width="52" height="11" rx="5.5" fill="white" opacity="0.5"/>
+
+  <!-- Calendar grid row 1 -->
+  <circle cx="172" cy="268" r="22" fill="#F0FDF4"/>
+  <circle cx="228" cy="268" r="22" fill="#F0FDF4"/>
+  <circle cx="284" cy="268" r="22" fill="#16A34A"/>
+  <circle cx="340" cy="268" r="22" fill="#F0FDF4"/>
+
+  <!-- Calendar grid row 2 -->
+  <circle cx="172" cy="334" r="22" fill="#F0FDF4"/>
+  <circle cx="228" cy="334" r="22" fill="#F0FDF4"/>
+  <circle cx="284" cy="334" r="22" fill="#F0FDF4"/>
+  <circle cx="340" cy="334" r="22" fill="#F0FDF4"/>
+
+  <!-- "Today" number on highlighted cell -->
+  <text x="284" y="276" text-anchor="middle" dominant-baseline="middle"
+        font-family="system-ui, sans-serif" font-weight="800"
+        font-size="22" fill="white">24</text>
+
+  <!-- Family color dots on highlighted day -->
+  <circle cx="271" cy="286" r="5" fill="#DCFCE7"/>
+  <circle cx="284" cy="286" r="5" fill="#FFEDD5"/>
+  <circle cx="297" cy="286" r="5" fill="#FEF9C3"/>
+</svg>
