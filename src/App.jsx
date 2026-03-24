@@ -295,7 +295,7 @@ function MonthView({ calDays, eventsForDay, today, onOpenDay, onUpdateEvent }) {
                 {dayEvts.length > 3 && <div className="ev-more">+{dayEvts.length - 3}</div>}
               </div>
               <div className="cell-dots">
-                {dayEvts.slice(0, 5).map(e => (
+                {dayEvts.slice(2, 7).map(e => (
                   <span key={e.id} className="cell-dot" style={{ background: MEMBERS[e.member].color }} />
                 ))}
               </div>
