@@ -341,6 +341,8 @@ function WeekView({ events, filters, curDate, today, onOpenDay, onUpdateEvent })
 
   return (
     <main className="week-view">
+      {/* Scrollable area — headers + allday + time grid scroll together horizontally on mobile */}
+      <div className="wv-scroll" ref={scrollRef}>
       {/* Day headers */}
       <div className="wv-headers">
         <div className="wv-gutter" />
@@ -367,8 +369,7 @@ function WeekView({ events, filters, curDate, today, onOpenDay, onUpdateEvent })
         ))}
       </div>
 
-      {/* Scrollable time grid */}
-      <div className="wv-scroll" ref={scrollRef}>
+        {/* Time grid */}
         <div className="wv-grid" style={{ height: (END_HOUR - START_HOUR) * HOUR_H + 'px' }}>
           {/* Time labels */}
           <div className="wv-gutter wv-time-axis">

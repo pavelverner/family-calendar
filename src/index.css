@@ -1051,6 +1051,8 @@ input  { font: inherit; }
 [data-theme="dark"] .up-title { color: var(--text-1); }
 [data-theme="dark"] .up-meta { color: var(--text-3); }
 [data-theme="dark"] .filter-chip.off { border-color: var(--border); color: var(--text-3); }
+[data-theme="dark"] .logout-btn { color: var(--text-2); }
+[data-theme="dark"] .logout-btn:hover { background: rgba(220,38,38,.25); color: #FCA5A5; }
 [data-theme="dark"] .month-nav span { color: var(--text-2); }
 [data-theme="dark"] .month-nav button { color: var(--text-2); }
 [data-theme="dark"] .month-nav button:hover { background: var(--surface-2); }
