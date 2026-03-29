@@ -162,6 +162,8 @@ export default function App() {
 
   function openDay(ds) { setSelectedDay(ds); setInitialEditEvent(null); setShowModal(true); }
 
+  function openNewEvent() { setSelectedDay(null); setInitialEditEvent(null); setShowModal(true); }
+
   function openEvent(ev) {
     setSelectedDay(ev.date);
     setInitialEditEvent(ev);
@@ -267,12 +269,12 @@ export default function App() {
       {/* ── Upcoming ── */}
       <UpcomingEvents events={events} filters={filters} onOpenDay={openDay} />
 
-      <button className="fab" onClick={() => openDay(today)}>+</button>
+      <button className="fab" onClick={openNewEvent}>+</button>
 
       {showModal && (
         <DayModal
           dateStr={selectedDay}
-          events={events.filter(e => isEventOnDate(e, selectedDay))}
+          events={selectedDay ? events.filter(e => isEventOnDate(e, selectedDay)) : []}
           templates={templates}
           defaultMember={currentMemberKey}
           initialEditEvent={initialEditEvent}
@@ -555,7 +557,8 @@ function UpcomingEvents({ events, filters, onOpenDay }) {
 function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent, onAdd, onDelete, onUpdate, onAddTemplate, onDeleteTemplate, onClose }) {
   const kbH = useKeyboardHeight();
   // mode: 'list' | 'step1' | 'step2'
-  const [mode,     setMode]     = useState(initialEditEvent ? 'step1' : 'list');
+  // If no dateStr (FAB new event) or editing, skip list and go straight to step1
+  const [mode,     setMode]     = useState((initialEditEvent || !dateStr) ? 'step1' : 'list');
   const [editId,   setEditId]   = useState(initialEditEvent?.id ?? null);
   const [saving,   setSaving]   = useState(false);
 
@@ -563,7 +566,7 @@ function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent,
   const [member,   setMember]   = useState(initialEditEvent?.member   ?? defaultMember);
   const [category, setCategory] = useState(initialEditEvent?.category ?? 'none');
   const [title,    setTitle]    = useState(initialEditEvent?.title    ?? '');
-  const [date,     setDate]     = useState(initialEditEvent?.date     ?? dateStr);
+  const [date,     setDate]     = useState(initialEditEvent?.date ?? dateStr ?? '');
   const [multiDay, setMultiDay] = useState(!!(initialEditEvent?.endDate));
   const [endDate,  setEndDate]  = useState(initialEditEvent?.endDate  ?? '');
   const [useTime,  setUseTime]  = useState(!!(initialEditEvent?.time));
@@ -574,12 +577,14 @@ function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent,
   const [showNote, setShowNote] = useState(!!(initialEditEvent?.note));
 
   const sorted = [...events].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-  const displayDate = new Date(dateStr + 'T12:00:00');
-  const dateLabel = displayDate.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' });
+  const displayDate = dateStr ? new Date(dateStr + 'T12:00:00') : null;
+  const dateLabel = displayDate
+    ? displayDate.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' })
+    : 'Nová událost';
 
   function resetForm() {
     setMember(defaultMember); setCategory('none'); setTitle('');
-    setDate(dateStr); setMultiDay(false); setEndDate('');
+    setDate(dateStr ?? ''); setMultiDay(false); setEndDate('');
     setUseTime(false); setTime('09:00'); setDuration(60);
     setRepeat('none'); setNote(''); setShowNote(false); setEditId(null);
   }
