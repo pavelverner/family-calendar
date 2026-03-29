@@ -570,7 +570,7 @@ function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent,
   const [multiDay, setMultiDay] = useState(!!(initialEditEvent?.endDate));
   const [endDate,  setEndDate]  = useState(initialEditEvent?.endDate  ?? '');
   const [useTime,  setUseTime]  = useState(!!(initialEditEvent?.time));
-  const [time,     setTime]     = useState(initialEditEvent?.time     ?? '09:00');
+  const [time,     setTime]     = useState(initialEditEvent?.time     ?? '13:00');
   const [duration, setDuration] = useState(initialEditEvent?.duration ?? 60);
   const [repeat,   setRepeat]   = useState(initialEditEvent?.repeat   ?? 'none');
   const [note,     setNote]     = useState(initialEditEvent?.note     ?? '');
@@ -585,7 +585,7 @@ function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent,
   function resetForm() {
     setMember(defaultMember); setCategory('none'); setTitle('');
     setDate(dateStr ?? ''); setMultiDay(false); setEndDate('');
-    setUseTime(false); setTime('09:00'); setDuration(60);
+    setUseTime(false); setTime('13:00'); setDuration(60);
     setRepeat('none'); setNote(''); setShowNote(false); setEditId(null);
   }
 
