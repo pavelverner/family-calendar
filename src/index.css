@@ -465,10 +465,17 @@ input  { font: inherit; }
   color: #fff;
   font-weight: 500;
   overflow: hidden;
+  cursor: pointer;
 }
+.cell-event:hover { opacity: .85; }
 .ev-time-cell  { font-size: .64rem; opacity: .85; flex-shrink: 0; }
 .ev-title-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ev-more       { font-size: .67rem; color: #94A3B8; padding-left: 2px; }
+
+/* Multi-day event bar styling */
+.cell-event.md-start { border-radius: 4px 0 0 4px; margin-right: -4px; padding-right: 2px; }
+.cell-event.md-mid   { border-radius: 0; margin-left: -4px; margin-right: -4px; padding: 1px 2px; opacity: .85; }
+.cell-event.md-end   { border-radius: 0 4px 4px 0; margin-left: -4px; padding-left: 2px; }
 
 /* Mobile dots (hidden on desktop) */
 .cell-dots { display: none; }
@@ -779,6 +786,23 @@ input  { font: inherit; }
 .btn-add-note { font-size: .85rem; color: #94A3B8; font-weight: 500; padding: 4px 0; text-align: left; }
 .btn-add-note:hover { color: #64748B; }
 
+/* Date range row (multi-day) */
+.date-range-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.date-inp { flex: 1; }
+.date-range-sep {
+  font-size: .9rem;
+  color: #94A3B8;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+
+/* Multi-day badge in event list */
+.ev-multiday-badge { color: #2563EB; background: #EFF6FF; }
+
 .duration-row { display: flex; gap: 5px; flex-wrap: wrap; }
 .duration-btn {
   flex: 1; min-width: 48px; padding: 8px 4px;
@@ -909,7 +933,9 @@ input  { font: inherit; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
 }
+.wv-allday-ev:hover { opacity: .85; }
 
 /* Scrollable grid */
 .wv-scroll {

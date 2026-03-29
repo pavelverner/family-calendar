@@ -13,6 +13,26 @@ function useKeyboardHeight() {
   return kbH;
 }
 
+function useSwipe(onLeft, onRight, minDist = 55) {
+  const startX = useRef(null);
+  const startY = useRef(null);
+  return {
+    onTouchStart: e => {
+      startX.current = e.touches[0].clientX;
+      startY.current = e.touches[0].clientY;
+    },
+    onTouchEnd: e => {
+      if (startX.current === null) return;
+      const dx = startX.current - e.changedTouches[0].clientX;
+      const dy = Math.abs(startY.current - e.changedTouches[0].clientY);
+      if (Math.abs(dx) > minDist && Math.abs(dx) > dy) {
+        dx > 0 ? onLeft() : onRight();
+      }
+      startX.current = null;
+    },
+  };
+}
+
 function useDarkMode() {
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -75,6 +95,9 @@ function getCalendarDays(year, month) {
 }
 
 function isEventOnDate(event, dateStr) {
+  if (event.endDate && event.endDate > event.date) {
+    return dateStr >= event.date && dateStr <= event.endDate;
+  }
   if (event.date === dateStr) return true;
   if (!event.repeat || event.repeat === 'none') return false;
   const orig   = new Date(event.date + 'T12:00:00');
@@ -90,17 +113,26 @@ function isEventOnDate(event, dateStr) {
   return false;
 }
 
+// Returns 'start' | 'mid' | 'end' | null for multi-day events
+function multiDayPos(event, dateStr) {
+  if (!event.endDate || event.endDate <= event.date) return null;
+  if (dateStr === event.date) return 'start';
+  if (dateStr === event.endDate) return 'end';
+  return 'mid';
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [user,        setUser]        = useState(undefined);
-  const [events,      setEvents]      = useState([]);
-  const [templates,   setTemplates]   = useState([]);
-  const [curDate,     setCurDate]     = useState(new Date());
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [showModal,   setShowModal]   = useState(false);
-  const [filters,     setFilters]     = useState(new Set(Object.keys(MEMBERS)));
-  const [view,        setView]        = useState('month'); // 'month' | 'week'
+  const [user,             setUser]             = useState(undefined);
+  const [events,           setEvents]           = useState([]);
+  const [templates,        setTemplates]        = useState([]);
+  const [curDate,          setCurDate]          = useState(new Date());
+  const [selectedDay,      setSelectedDay]      = useState(null);
+  const [showModal,        setShowModal]        = useState(false);
+  const [initialEditEvent, setInitialEditEvent] = useState(null);
+  const [filters,          setFilters]          = useState(new Set(Object.keys(MEMBERS)));
+  const [view,             setView]             = useState('month'); // 'month' | 'week'
   const [dark, setDark] = useDarkMode();
 
   useEffect(() => onAuthStateChanged(auth, u => setUser(u ?? null)), []);
@@ -128,7 +160,13 @@ export default function App() {
     setFilters(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
   }
 
-  function openDay(ds) { setSelectedDay(ds); setShowModal(true); }
+  function openDay(ds) { setSelectedDay(ds); setInitialEditEvent(null); setShowModal(true); }
+
+  function openEvent(ev) {
+    setSelectedDay(ev.date);
+    setInitialEditEvent(ev);
+    setShowModal(true);
+  }
 
   async function addEvent(data)          { await addDoc(collection(db, 'events'), { ...data, createdAt: new Date().toISOString() }); }
   async function deleteEvent(id)         { await deleteDoc(doc(db, 'events', id)); }
@@ -209,7 +247,10 @@ export default function App() {
           eventsForDay={eventsForDay}
           today={today}
           onOpenDay={openDay}
+          onOpenEvent={openEvent}
           onUpdateEvent={updateEvent}
+          navPrev={navPrev}
+          navNext={navNext}
         />
       ) : (
         <WeekView
@@ -218,6 +259,7 @@ export default function App() {
           curDate={curDate}
           today={today}
           onOpenDay={openDay}
+          onOpenEvent={openEvent}
           onUpdateEvent={updateEvent}
         />
       )}
@@ -233,12 +275,13 @@ export default function App() {
           events={events.filter(e => isEventOnDate(e, selectedDay))}
           templates={templates}
           defaultMember={currentMemberKey}
+          initialEditEvent={initialEditEvent}
           onAdd={addEvent}
           onDelete={deleteEvent}
           onUpdate={updateEvent}
           onAddTemplate={addTemplate}
           onDeleteTemplate={deleteTemplate}
-          onClose={() => setShowModal(false)}
+          onClose={() => { setShowModal(false); setInitialEditEvent(null); }}
         />
       )}
     </div>
@@ -247,11 +290,12 @@ export default function App() {
 
 // ── Month View ────────────────────────────────────────────────────────────────
 
-function MonthView({ calDays, eventsForDay, today, onOpenDay, onUpdateEvent }) {
+function MonthView({ calDays, eventsForDay, today, onOpenDay, onOpenEvent, onUpdateEvent, navPrev, navNext }) {
   const [dragOverDs, setDragOverDs] = useState(null);
+  const swipe = useSwipe(navNext, navPrev);
 
   return (
-    <main className="calendar-wrap">
+    <main className="calendar-wrap" {...swipe}>
       <div className="cal-grid">
         {DAYS_CZ.map(d => <div key={d} className="cal-head">{d}</div>)}
 
@@ -276,22 +320,25 @@ function MonthView({ calDays, eventsForDay, today, onOpenDay, onUpdateEvent }) {
             >
               <span className={`day-num ${isToday ? 'today-num' : ''}`}>{date.getDate()}</span>
               <div className="cell-events">
-                {dayEvts.slice(0, 3).map(e => (
-                  <div
-                    key={e.id}
-                    className="cell-event"
-                    style={{ background: MEMBERS[e.member].color }}
-                    draggable={!e.repeat || e.repeat === 'none'}
-                    onDragStart={ev => { ev.dataTransfer.setData('eventId', e.id); ev.stopPropagation(); }}
-                    onClick={ev => ev.stopPropagation()}
-                    title={`${MEMBERS[e.member].name}: ${e.time ? e.time + ' ' : ''}${e.title}`}
-                  >
-                    <span className="ev-cat">{CATEGORIES[e.category || 'none']?.icon}</span>
-                    <span className="ev-time-cell">{e.time}</span>
-                    <span className="ev-title-cell">{e.title}</span>
-                    {e.repeat && e.repeat !== 'none' && <span className="ev-repeat">🔁</span>}
-                  </div>
-                ))}
+                {dayEvts.slice(0, 3).map(e => {
+                  const pos = multiDayPos(e, ds);
+                  return (
+                    <div
+                      key={e.id}
+                      className={`cell-event ${pos ? `md-${pos}` : ''}`}
+                      style={{ background: MEMBERS[e.member].color }}
+                      draggable={!e.repeat || e.repeat === 'none'}
+                      onDragStart={ev => { ev.dataTransfer.setData('eventId', e.id); ev.stopPropagation(); }}
+                      onClick={ev => { ev.stopPropagation(); onOpenEvent(e); }}
+                      title={`${MEMBERS[e.member].name}: ${e.time ? e.time + ' ' : ''}${e.title}`}
+                    >
+                      {pos !== 'mid' && <span className="ev-cat">{CATEGORIES[e.category || 'none']?.icon}</span>}
+                      {!pos && <span className="ev-time-cell">{e.time}</span>}
+                      <span className="ev-title-cell">{pos === 'mid' ? '' : e.title}</span>
+                      {e.repeat && e.repeat !== 'none' && <span className="ev-repeat">🔁</span>}
+                    </div>
+                  );
+                })}
                 {dayEvts.length > 3 && <div className="ev-more">+{dayEvts.length - 3}</div>}
               </div>
               <div className="cell-dots">
@@ -319,7 +366,7 @@ function timeToY(time) {
   return (h - START_HOUR) * HOUR_H + (m / 60) * HOUR_H;
 }
 
-function WeekView({ events, filters, curDate, today, onOpenDay, onUpdateEvent }) {
+function WeekView({ events, filters, curDate, today, onOpenDay, onOpenEvent, onUpdateEvent }) {
   const monday = getWeekStart(curDate);
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
@@ -360,7 +407,12 @@ function WeekView({ events, filters, curDate, today, onOpenDay, onUpdateEvent })
         {weekDays.map(({ ds }) => (
           <div key={ds} className="wv-allday-col" onClick={() => onOpenDay(ds)}>
             {dayEvents(ds).filter(e => !e.time).map(e => (
-              <div key={e.id} className="wv-allday-ev" style={{ background: MEMBERS[e.member].color }}>
+              <div
+                key={e.id}
+                className="wv-allday-ev"
+                style={{ background: MEMBERS[e.member].color }}
+                onClick={ev => { ev.stopPropagation(); onOpenEvent(e); }}
+              >
                 {CATEGORIES[e.category || 'none']?.icon} {e.title}
                 {e.repeat && e.repeat !== 'none' && ' 🔁'}
               </div>
@@ -411,7 +463,7 @@ function WeekView({ events, filters, curDate, today, onOpenDay, onUpdateEvent })
                   style={{ top: timeToY(e.time) + 'px', background: MEMBERS[e.member].color }}
                   draggable={!e.repeat || e.repeat === 'none'}
                   onDragStart={ev => { ev.dataTransfer.setData('eventId', e.id); ev.stopPropagation(); }}
-                  onClick={ev => { ev.stopPropagation(); onOpenDay(ds); }}
+                  onClick={ev => { ev.stopPropagation(); onOpenEvent(e); }}
                   title={`${MEMBERS[e.member].name}: ${e.time} ${e.title}`}
                 >
                   <span className="wv-ev-time">{e.time}</span>
@@ -500,24 +552,26 @@ function UpcomingEvents({ events, filters, onOpenDay }) {
 
 // ── Day Modal (wizard) ────────────────────────────────────────────────────────
 
-function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, onUpdate, onAddTemplate, onDeleteTemplate, onClose }) {
+function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent, onAdd, onDelete, onUpdate, onAddTemplate, onDeleteTemplate, onClose }) {
   const kbH = useKeyboardHeight();
   // mode: 'list' | 'step1' | 'step2'
-  const [mode,     setMode]     = useState('list');
-  const [editId,   setEditId]   = useState(null);
+  const [mode,     setMode]     = useState(initialEditEvent ? 'step1' : 'list');
+  const [editId,   setEditId]   = useState(initialEditEvent?.id ?? null);
   const [saving,   setSaving]   = useState(false);
 
-  // Form state
-  const [member,   setMember]   = useState(defaultMember);
-  const [category, setCategory] = useState('none');
-  const [title,    setTitle]    = useState('');
-  const [date,     setDate]     = useState(dateStr);
-  const [useTime,  setUseTime]  = useState(false);
-  const [time,     setTime]     = useState('09:00');
-  const [duration, setDuration] = useState(60); // minutes
-  const [repeat,   setRepeat]   = useState('none');
-  const [note,     setNote]     = useState('');
-  const [showNote, setShowNote] = useState(false);
+  // Form state — initialized from initialEditEvent if present
+  const [member,   setMember]   = useState(initialEditEvent?.member   ?? defaultMember);
+  const [category, setCategory] = useState(initialEditEvent?.category ?? 'none');
+  const [title,    setTitle]    = useState(initialEditEvent?.title    ?? '');
+  const [date,     setDate]     = useState(initialEditEvent?.date     ?? dateStr);
+  const [multiDay, setMultiDay] = useState(!!(initialEditEvent?.endDate));
+  const [endDate,  setEndDate]  = useState(initialEditEvent?.endDate  ?? '');
+  const [useTime,  setUseTime]  = useState(!!(initialEditEvent?.time));
+  const [time,     setTime]     = useState(initialEditEvent?.time     ?? '09:00');
+  const [duration, setDuration] = useState(initialEditEvent?.duration ?? 60);
+  const [repeat,   setRepeat]   = useState(initialEditEvent?.repeat   ?? 'none');
+  const [note,     setNote]     = useState(initialEditEvent?.note     ?? '');
+  const [showNote, setShowNote] = useState(!!(initialEditEvent?.note));
 
   const sorted = [...events].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
   const displayDate = new Date(dateStr + 'T12:00:00');
@@ -525,7 +579,8 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
 
   function resetForm() {
     setMember(defaultMember); setCategory('none'); setTitle('');
-    setDate(dateStr); setUseTime(false); setTime('09:00'); setDuration(60);
+    setDate(dateStr); setMultiDay(false); setEndDate('');
+    setUseTime(false); setTime('09:00'); setDuration(60);
     setRepeat('none'); setNote(''); setShowNote(false); setEditId(null);
   }
 
@@ -533,7 +588,9 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
 
   function startEdit(ev) {
     setEditId(ev.id); setMember(ev.member); setCategory(ev.category || 'none');
-    setTitle(ev.title); setDate(ev.date); setRepeat(ev.repeat || 'none');
+    setTitle(ev.title); setDate(ev.date);
+    setMultiDay(!!(ev.endDate)); setEndDate(ev.endDate || '');
+    setRepeat(ev.repeat || 'none');
     setNote(ev.note || ''); setShowNote(!!ev.note); setDuration(ev.duration ?? 60);
     if (ev.time) { setUseTime(true); setTime(ev.time); } else { setUseTime(false); }
     setMode('step1');
@@ -544,6 +601,7 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
       title: t.title, member: t.member, category: t.category || 'none',
       note: t.note || '', date: dateStr,
       time: t.time || null, repeat: t.repeat || 'none',
+      endDate: null,
     };
     await onAdd(data);
   }
@@ -551,7 +609,13 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
   async function handleSave() {
     if (!title.trim()) return;
     setSaving(true);
-    const data = { title: title.trim(), member, category, note, date, time: useTime ? time : null, duration: useTime ? duration : null, repeat };
+    const data = {
+      title: title.trim(), member, category, note, date,
+      time: useTime ? time : null,
+      duration: useTime ? duration : null,
+      repeat,
+      endDate: multiDay && endDate && endDate > date ? endDate : null,
+    };
     if (editId) await onUpdate(editId, data);
     else        await onAdd(data);
     onClose();
@@ -622,6 +686,7 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
                       <span className="ev-cat-icon">{CATEGORIES[ev.category || 'none']?.icon}</span>
                       <span className="ev-member" style={{ color: MEMBERS[ev.member].color }}>{MEMBERS[ev.member].name}</span>
                       {ev.time && <span className="ev-badge">{ev.time}</span>}
+                      {ev.endDate && ev.endDate > ev.date && <span className="ev-badge ev-multiday-badge">↔ více dní</span>}
                       {ev.repeat && ev.repeat !== 'none' && <span className="ev-badge">🔁</span>}
                       <span className="ev-name">{ev.title}</span>
                       {ev.note && <span className="ev-note-preview">{ev.note}</span>}
@@ -711,19 +776,42 @@ function DayModal({ dateStr, events, templates, defaultMember, onAdd, onDelete, 
                 autoFocus
               />
 
-              <input className="form-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
-
-              <div className="time-row">
-                <button className={`time-toggle ${useTime ? 'on' : ''}`} onClick={() => setUseTime(v => !v)}>
-                  <span className="time-toggle-knob" />
-                </button>
-                <span className="time-toggle-label" onClick={() => setUseTime(v => !v)}>Konkrétní čas</span>
-                {useTime && (
-                  <input className="form-input time-inp" type="time" step="900" value={time} onChange={e => setTime(e.target.value)} />
+              <div className="date-range-row">
+                <input className="form-input date-inp" type="date" value={date} onChange={e => setDate(e.target.value)} />
+                {multiDay && (
+                  <>
+                    <span className="date-range-sep">→</span>
+                    <input
+                      className="form-input date-inp"
+                      type="date"
+                      value={endDate}
+                      min={date}
+                      onChange={e => setEndDate(e.target.value)}
+                    />
+                  </>
                 )}
               </div>
 
-              {useTime && (
+              <div className="time-row">
+                <button className={`time-toggle ${multiDay ? 'on' : ''}`} onClick={() => { setMultiDay(v => !v); if (multiDay) setEndDate(''); }}>
+                  <span className="time-toggle-knob" />
+                </button>
+                <span className="time-toggle-label" onClick={() => { setMultiDay(v => !v); if (multiDay) setEndDate(''); }}>Více dní</span>
+              </div>
+
+              {!multiDay && (
+                <div className="time-row">
+                  <button className={`time-toggle ${useTime ? 'on' : ''}`} onClick={() => setUseTime(v => !v)}>
+                    <span className="time-toggle-knob" />
+                  </button>
+                  <span className="time-toggle-label" onClick={() => setUseTime(v => !v)}>Konkrétní čas</span>
+                  {useTime && (
+                    <input className="form-input time-inp" type="time" step="900" value={time} onChange={e => setTime(e.target.value)} />
+                  )}
+                </div>
+              )}
+
+              {!multiDay && useTime && (
                 <div className="duration-row">
                   {[30, 60, 120, 240].map(m => (
                     <button
