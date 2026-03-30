@@ -34,3 +34,13 @@ export const REPEAT_OPTIONS = [
   { value: 'weekly',  label: 'Každý týden' },
   { value: 'monthly', label: 'Každý měsíc' },
 ];
+
+export const STATUSES = [
+  { key: 'none',       emoji: '',   label: 'Zrušit status',   detail: false },
+  { key: 'rano',       emoji: '🌅', label: 'Ranní',           detail: false },
+  { key: 'odp',        emoji: '🌆', label: 'Odpolední',       detail: false },
+  { key: 'boleslav',   emoji: '🏭', label: 'Boleslav',        detail: false },
+  { key: 'afi',        emoji: '🏢', label: 'AFI',             detail: false },
+  { key: 'greencode',  emoji: '💻', label: 'Green:Code',      detail: false },
+  { key: 'away',       emoji: '✈️', label: 'Pryč',            detail: true  },
+];

@@ -45,14 +45,16 @@ function useDarkMode() {
   }, [dark]);
   return [dark, setDark];
 }
+
 import {
-  collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc,
+  collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, setDoc,
 } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { db, auth } from './firebase';
-import { MEMBERS, DAYS_CZ, MONTHS_CZ, CATEGORIES, REPEAT_OPTIONS, USER_EMAILS } from './constants';
+import { MEMBERS, DAYS_CZ, MONTHS_CZ, CATEGORIES, REPEAT_OPTIONS, USER_EMAILS, STATUSES } from './constants';
 import Login from './Login';
 import { EliskaAvatar, PavelAvatar, FilipAvatar, VsichniAvatar } from './Avatars';
+import ChoresView from './Chores';
 
 const EMAIL_TO_KEY = Object.fromEntries(
   Object.entries(USER_EMAILS).map(([k, v]) => [v, k])
@@ -113,7 +115,6 @@ function isEventOnDate(event, dateStr) {
   return false;
 }
 
-// Returns 'start' | 'mid' | 'end' | null for multi-day events
 function multiDayPos(event, dateStr) {
   if (!event.endDate || event.endDate <= event.date) return null;
   if (dateStr === event.date) return 'start';
@@ -127,12 +128,14 @@ export default function App() {
   const [user,             setUser]             = useState(undefined);
   const [events,           setEvents]           = useState([]);
   const [templates,        setTemplates]        = useState([]);
+  const [statuses,         setStatuses]         = useState({});
   const [curDate,          setCurDate]          = useState(new Date());
   const [selectedDay,      setSelectedDay]      = useState(null);
   const [showModal,        setShowModal]        = useState(false);
   const [initialEditEvent, setInitialEditEvent] = useState(null);
+  const [showStatusPicker, setShowStatusPicker] = useState(false);
   const [filters,          setFilters]          = useState(new Set(Object.keys(MEMBERS)));
-  const [view,             setView]             = useState('month'); // 'month' | 'week'
+  const [view,             setView]             = useState('month'); // 'month' | 'week' | 'chores'
   const [dark, setDark] = useDarkMode();
 
   useEffect(() => onAuthStateChanged(auth, u => setUser(u ?? null)), []);
@@ -141,7 +144,12 @@ export default function App() {
     if (!user) return;
     const u1 = onSnapshot(collection(db, 'events'),    snap => setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
     const u2 = onSnapshot(collection(db, 'templates'), snap => setTemplates(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
-    return () => { u1(); u2(); };
+    const u3 = onSnapshot(collection(db, 'statuses'),  snap => {
+      const map = {};
+      snap.docs.forEach(d => { map[d.id] = d.data(); });
+      setStatuses(map);
+    });
+    return () => { u1(); u2(); u3(); };
   }, [user]);
 
   if (user === undefined) return <div className="loading-screen"><div className="spinner" />Načítám…</div>;
@@ -176,7 +184,16 @@ export default function App() {
   async function addTemplate(data)       { await addDoc(collection(db, 'templates'), data); }
   async function deleteTemplate(id)      { await deleteDoc(doc(db, 'templates', id)); }
 
-  // Header nav: month moves by month, week moves by 7 days
+  async function saveStatus(statusKey, detail = '') {
+    await setDoc(doc(db, 'statuses', currentMemberKey), {
+      status: statusKey,
+      detail,
+      updatedAt: new Date().toISOString(),
+    });
+    setShowStatusPicker(false);
+  }
+
+  // Header nav
   function navPrev() {
     if (view === 'week') setCurDate(d => { const n = new Date(d); n.setDate(n.getDate() - 7); return n; });
     else setCurDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1));
@@ -199,6 +216,9 @@ export default function App() {
   const month = curDate.getMonth();
   const calDays = getCalendarDays(year, month);
 
+  const myStatus   = statuses[currentMemberKey];
+  const myStatusDef = STATUSES.find(s => s.key === myStatus?.status);
+
   return (
     <div className="app">
       {/* ── Header ── */}
@@ -206,44 +226,90 @@ export default function App() {
         <div className="header-row1">
           <h1 className="app-title">📅 Vernouščí Kalendář</h1>
           <div className="header-user">
-            <div className="user-badge">
-              {currentMemberKey === 'eliska' ? <EliskaAvatar size={30} /> :
-               currentMemberKey === 'pavel'  ? <PavelAvatar  size={30} /> :
-               <span style={{ color: '#fff', fontWeight: 800, fontSize: '.85rem' }}>{MEMBERS[currentMemberKey].name[0]}</span>}
-            </div>
+            {/* User avatar — tap to set status */}
+            <button
+              className="user-badge-btn"
+              onClick={() => setShowStatusPicker(true)}
+              title="Nastavit status"
+            >
+              <div className="user-badge">
+                {currentMemberKey === 'eliska' ? <EliskaAvatar size={30} /> :
+                 currentMemberKey === 'pavel'  ? <PavelAvatar  size={30} /> :
+                 <span style={{ color: '#fff', fontWeight: 800, fontSize: '.85rem' }}>{MEMBERS[currentMemberKey].name[0]}</span>}
+              </div>
+              {myStatusDef && myStatusDef.key !== 'none' && (
+                <span className="user-status-badge">{myStatusDef.emoji}</span>
+              )}
+            </button>
             <button className="theme-btn" onClick={() => setDark(d => !d)} title="Tmavý režim">
               {dark ? '☀️' : '🌙'}
             </button>
             <button className="logout-btn" onClick={() => signOut(auth)} title="Odhlásit se">⎋</button>
           </div>
         </div>
-        <div className="header-row2">
-          <div className="view-toggle">
-            <button className={view === 'month' ? 'active' : ''} onClick={() => setView('month')}>Měsíc</button>
-            <button className={view === 'week'  ? 'active' : ''} onClick={() => setView('week')}>Týden</button>
+
+        {/* Nav only for calendar views */}
+        {view !== 'chores' && (
+          <div className="header-row2">
+            <div className="view-toggle">
+              <button className={view === 'month' ? 'active' : ''} onClick={() => setView('month')}>Měsíc</button>
+              <button className={view === 'week'  ? 'active' : ''} onClick={() => setView('week')}>Týden</button>
+            </div>
+            <nav className="month-nav">
+              <button onClick={navPrev}>‹</button>
+              <span>{navLabel()}</span>
+              <button onClick={navNext}>›</button>
+            </nav>
           </div>
-          <nav className="month-nav">
-            <button onClick={navPrev}>‹</button>
-            <span>{navLabel()}</span>
-            <button onClick={navNext}>›</button>
-          </nav>
-        </div>
+        )}
+
+        {/* View toggle (always visible) */}
+        {view === 'chores' && (
+          <div className="header-row2">
+            <div className="view-toggle">
+              <button onClick={() => setView('month')}>Měsíc</button>
+              <button onClick={() => setView('week')}>Týden</button>
+              <button className="active">Domácnost</button>
+            </div>
+          </div>
+        )}
+
         <div className="filter-chips">
-          {Object.entries(MEMBERS).map(([key, m]) => (
+          {/* Domácnost chip in view-toggle style when not in chores */}
+          {view !== 'chores' && (
             <button
-              key={key}
-              className={`filter-chip ${filters.has(key) ? 'on' : 'off'}`}
-              style={{ '--c': m.color, '--l': m.light }}
-              onClick={() => toggleFilter(key)}
+              className="filter-chip chores-view-chip"
+              onClick={() => setView('chores')}
+              title="Domácí práce"
             >
-              <span className="chip-dot" />{m.name}
+              🏠 Domácnost
             </button>
-          ))}
+          )}
+          {Object.entries(MEMBERS).map(([key, m]) => {
+            const st = statuses[key];
+            const stDef = STATUSES.find(s => s.key === st?.status);
+            return (
+              <button
+                key={key}
+                className={`filter-chip ${filters.has(key) ? 'on' : 'off'}`}
+                style={{ '--c': m.color, '--l': m.light }}
+                onClick={() => toggleFilter(key)}
+              >
+                <span className="chip-dot" />
+                {m.name}
+                {stDef && stDef.key !== 'none' && (
+                  <span className="chip-status" title={stDef.label + (st?.detail ? ` – ${st.detail}` : '')}>
+                    {stDef.emoji}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </header>
 
       {/* ── Views ── */}
-      {view === 'month' ? (
+      {view === 'month' && (
         <MonthView
           calDays={calDays}
           eventsForDay={eventsForDay}
@@ -254,7 +320,8 @@ export default function App() {
           navPrev={navPrev}
           navNext={navNext}
         />
-      ) : (
+      )}
+      {view === 'week' && (
         <WeekView
           events={events}
           filters={filters}
@@ -265,12 +332,19 @@ export default function App() {
           onUpdateEvent={updateEvent}
         />
       )}
+      {view === 'chores' && <ChoresView />}
 
-      {/* ── Upcoming ── */}
-      <UpcomingEvents events={events} filters={filters} onOpenDay={openDay} />
+      {/* ── Upcoming (calendar only) ── */}
+      {view !== 'chores' && (
+        <UpcomingEvents events={events} filters={filters} onOpenDay={openDay} />
+      )}
 
-      <button className="fab" onClick={openNewEvent}>+</button>
+      {/* FAB — calendar only */}
+      {view !== 'chores' && (
+        <button className="fab" onClick={openNewEvent}>+</button>
+      )}
 
+      {/* Event modal */}
       {showModal && (
         <DayModal
           dateStr={selectedDay}
@@ -286,6 +360,74 @@ export default function App() {
           onClose={() => { setShowModal(false); setInitialEditEvent(null); }}
         />
       )}
+
+      {/* Status picker */}
+      {showStatusPicker && (
+        <StatusPicker
+          currentKey={myStatus?.status || 'none'}
+          currentDetail={myStatus?.detail || ''}
+          memberKey={currentMemberKey}
+          onSave={saveStatus}
+          onClose={() => setShowStatusPicker(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Status Picker ─────────────────────────────────────────────────────────────
+
+function StatusPicker({ currentKey, currentDetail, memberKey, onSave, onClose }) {
+  const [selected, setSelected] = useState(currentKey);
+  const [detail,   setDetail]   = useState(currentDetail);
+  const needsDetail = STATUSES.find(s => s.key === selected)?.detail;
+
+  function handleSave() {
+    onSave(selected, selected === 'none' ? '' : detail);
+  }
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal status-modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-hdr">
+          <div className="modal-hdr-left"><h2>Kde jsem?</h2></div>
+          <button className="close-btn" onClick={onClose}>✕</button>
+        </div>
+        <div className="status-picker-body">
+          <div className="status-grid">
+            {STATUSES.map(s => (
+              <button
+                key={s.key}
+                className={`status-option ${selected === s.key ? 'sel' : ''}`}
+                style={selected === s.key ? { '--c': MEMBERS[memberKey].color, '--l': MEMBERS[memberKey].light } : {}}
+                onClick={() => setSelected(s.key)}
+              >
+                {s.emoji && <span className="status-opt-emoji">{s.emoji}</span>}
+                <span className="status-opt-label">{s.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {needsDetail && (
+            <input
+              className="form-input"
+              type="text"
+              placeholder="Kam jedeš? (volitelné)"
+              value={detail}
+              onChange={e => setDetail(e.target.value)}
+              autoFocus
+            />
+          )}
+
+          <button
+            className="btn-add"
+            style={{ '--c': MEMBERS[memberKey].color }}
+            onClick={handleSave}
+          >
+            Uložit
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -379,7 +521,6 @@ function WeekView({ events, filters, curDate, today, onOpenDay, onOpenEvent, onU
   const [dragOverDs, setDragOverDs] = useState(null);
   const scrollRef = useRef(null);
 
-  // Scroll to 7:00 on mount
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = HOUR_H;
   }, []);
@@ -390,9 +531,7 @@ function WeekView({ events, filters, curDate, today, onOpenDay, onOpenEvent, onU
 
   return (
     <main className="week-view">
-      {/* Scrollable area — headers + allday + time grid scroll together horizontally on mobile */}
       <div className="wv-scroll" ref={scrollRef}>
-      {/* Day headers */}
       <div className="wv-headers">
         <div className="wv-gutter" />
         {weekDays.map(({ date, ds }) => (
@@ -403,7 +542,6 @@ function WeekView({ events, filters, curDate, today, onOpenDay, onOpenEvent, onU
         ))}
       </div>
 
-      {/* All-day row */}
       <div className="wv-allday-row">
         <div className="wv-gutter"><span className="wv-allday-lbl">celý den</span></div>
         {weekDays.map(({ ds }) => (
@@ -423,9 +561,7 @@ function WeekView({ events, filters, curDate, today, onOpenDay, onOpenEvent, onU
         ))}
       </div>
 
-        {/* Time grid */}
         <div className="wv-grid" style={{ height: (END_HOUR - START_HOUR) * HOUR_H + 'px' }}>
-          {/* Time labels */}
           <div className="wv-gutter wv-time-axis">
             {HOURS.map(h => (
               <div key={h} className="wv-time-label" style={{ top: (h - START_HOUR) * HOUR_H + 'px' }}>
@@ -434,7 +570,6 @@ function WeekView({ events, filters, curDate, today, onOpenDay, onOpenEvent, onU
             ))}
           </div>
 
-          {/* Day columns */}
           {weekDays.map(({ ds }) => (
             <div
               key={ds}
@@ -449,15 +584,10 @@ function WeekView({ events, filters, curDate, today, onOpenDay, onOpenEvent, onU
                 if (id) await onUpdateEvent(id, { date: ds });
               }}
             >
-              {/* Hour lines */}
               {HOURS.map(h => (
                 <div key={h} className="wv-hline" style={{ top: (h - START_HOUR) * HOUR_H + 'px' }} />
               ))}
-
-              {/* Current time */}
               {ds === today && <CurrentTimeLine />}
-
-              {/* Timed events */}
               {dayEvents(ds).filter(e => e.time).map(e => (
                 <div
                   key={e.id}
@@ -505,13 +635,12 @@ function UpcomingEvents({ events, filters, onOpenDay }) {
     const d = new Date(); d.setDate(d.getDate() + i); return toDateStr(d);
   });
 
-  const nowTime = new Date().toTimeString().slice(0, 5); // HH:MM
+  const nowTime = new Date().toTimeString().slice(0, 5);
 
   const upcoming = days.flatMap(ds =>
     events
       .filter(e => {
         if (!isEventOnDate(e, ds) || !filters.has(e.member)) return false;
-        // hide past timed events on today
         if (ds === today && e.time && e.time < nowTime) return false;
         return true;
       })
@@ -556,17 +685,14 @@ function UpcomingEvents({ events, filters, onOpenDay }) {
 
 function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent, onAdd, onDelete, onUpdate, onAddTemplate, onDeleteTemplate, onClose }) {
   const kbH = useKeyboardHeight();
-  // mode: 'list' | 'step1' | 'step2'
-  // If no dateStr (FAB new event) or editing, skip list and go straight to step1
   const [mode,     setMode]     = useState((initialEditEvent || !dateStr) ? 'step1' : 'list');
   const [editId,   setEditId]   = useState(initialEditEvent?.id ?? null);
   const [saving,   setSaving]   = useState(false);
 
-  // Form state — initialized from initialEditEvent if present
   const [member,   setMember]   = useState(initialEditEvent?.member   ?? defaultMember);
   const [category, setCategory] = useState(initialEditEvent?.category ?? 'none');
   const [title,    setTitle]    = useState(initialEditEvent?.title    ?? '');
-  const [date,     setDate]     = useState(initialEditEvent?.date ?? dateStr ?? '');
+  const [date,     setDate]     = useState(initialEditEvent?.date     ?? dateStr ?? '');
   const [multiDay, setMultiDay] = useState(!!(initialEditEvent?.endDate));
   const [endDate,  setEndDate]  = useState(initialEditEvent?.endDate  ?? '');
   const [useTime,  setUseTime]  = useState(!!(initialEditEvent?.time));
@@ -602,13 +728,11 @@ function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent,
   }
 
   async function applyTemplate(t) {
-    const data = {
+    await onAdd({
       title: t.title, member: t.member, category: t.category || 'none',
       note: t.note || '', date: dateStr,
-      time: t.time || null, repeat: t.repeat || 'none',
-      endDate: null,
-    };
-    await onAdd(data);
+      time: t.time || null, repeat: t.repeat || 'none', endDate: null,
+    });
   }
 
   async function handleSave() {
@@ -631,23 +755,17 @@ function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent,
     await onAddTemplate({ title: title.trim(), member, category, note, time: useTime ? time : null, repeat });
   }
 
-  // ── Header ──
   const hdrTitle = mode === 'list' ? dateLabel
-    : mode === 'step1' ? (editId ? 'Upravit událost' : 'Nová událost')
     : editId ? 'Upravit událost' : 'Nová událost';
 
   const hdrLeft = mode !== 'list' && (
-    <button className="back-btn" onClick={() => mode === 'step2' ? setMode('step1') : setMode('list')}>
-      ←
-    </button>
+    <button className="back-btn" onClick={() => mode === 'step2' ? setMode('step1') : setMode('list')}>←</button>
   );
 
-  // ── Render ──
   return (
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
 
-        {/* Handle + header — always visible */}
         <div className="modal-hdr">
           <div className="modal-hdr-left">
             {hdrLeft}
@@ -656,21 +774,16 @@ function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent,
           <button className="close-btn" onClick={onClose}>✕</button>
         </div>
 
-        {/* ── LIST mode ── */}
+        {/* LIST */}
         {mode === 'list' && (
           <div className="modal-list">
-            {/* Templates */}
             {templates.length > 0 && (
               <div className="templates-section">
                 <p className="section-label">Rychlé přidání</p>
                 <div className="template-chips">
                   {templates.map(t => (
                     <div key={t.id} className="tmpl-wrap">
-                      <button
-                        className="tmpl-chip"
-                        style={{ '--c': MEMBERS[t.member].color, '--l': MEMBERS[t.member].light }}
-                        onClick={() => applyTemplate(t)}
-                      >
+                      <button className="tmpl-chip" style={{ '--c': MEMBERS[t.member].color, '--l': MEMBERS[t.member].light }} onClick={() => applyTemplate(t)}>
                         {CATEGORIES[t.category || 'none']?.icon} {t.title}
                         {t.time && <span className="tmpl-time"> {t.time}</span>}
                       </button>
@@ -681,7 +794,6 @@ function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent,
               </div>
             )}
 
-            {/* Events */}
             {sorted.length > 0 && (
               <div className="event-list">
                 {templates.length > 0 && <p className="section-label">Události</p>}
@@ -709,28 +821,20 @@ function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent,
               <p className="no-events">Žádné události tento den.</p>
             )}
 
-            {/* Add button */}
             <div className="list-footer">
-              <button className="btn-new-event" onClick={openAdd}>
-                + Přidat událost
-              </button>
+              <button className="btn-new-event" onClick={openAdd}>+ Přidat událost</button>
             </div>
           </div>
         )}
 
-        {/* ── STEP 1: Kdo + Kategorie ── */}
+        {/* STEP 1 */}
         {mode === 'step1' && (
           <div className="wizard-step">
             <div className="wizard-body">
               <p className="step-label">Pro koho?</p>
               <div className="member-grid">
                 {Object.entries(MEMBERS).map(([key, m]) => (
-                  <button
-                    key={key}
-                    className={`mem-card ${member === key ? 'sel' : ''}`}
-                    style={{ '--c': m.color, '--l': m.light }}
-                    onClick={() => setMember(key)}
-                  >
+                  <button key={key} className={`mem-card ${member === key ? 'sel' : ''}`} style={{ '--c': m.color, '--l': m.light }} onClick={() => setMember(key)}>
                     <span className="mem-card-avatar">
                       {key === 'eliska'  ? <EliskaAvatar  size={44} /> :
                        key === 'pavel'   ? <PavelAvatar   size={44} /> :
@@ -745,11 +849,7 @@ function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent,
               <p className="step-label" style={{ marginTop: 20 }}>Kategorie</p>
               <div className="cat-grid">
                 {Object.entries(CATEGORIES).map(([key, c]) => (
-                  <button
-                    key={key}
-                    className={`cat-card ${category === key ? 'sel' : ''}`}
-                    onClick={() => setCategory(key)}
-                  >
+                  <button key={key} className={`cat-card ${category === key ? 'sel' : ''}`} onClick={() => setCategory(key)}>
                     <span className="cat-card-icon">{c.icon}</span>
                     <span className="cat-card-label">{c.label}</span>
                   </button>
@@ -758,41 +858,24 @@ function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent,
             </div>
 
             <div className="wizard-footer" style={{ paddingBottom: kbH > 0 ? kbH + 12 + 'px' : undefined }}>
-              <div className="wizard-dots">
-                <span className="dot active" /><span className="dot" />
-              </div>
-              <button className="btn-next" style={{ '--c': MEMBERS[member].color }} onClick={() => setMode('step2')}>
-                Dále →
-              </button>
+              <div className="wizard-dots"><span className="dot active" /><span className="dot" /></div>
+              <button className="btn-next" style={{ '--c': MEMBERS[member].color }} onClick={() => setMode('step2')}>Dále →</button>
             </div>
           </div>
         )}
 
-        {/* ── STEP 2: Co + Kdy ── */}
+        {/* STEP 2 */}
         {mode === 'step2' && (
           <div className="wizard-step">
             <div className="wizard-body">
-              <input
-                className="form-input title-inp"
-                type="text"
-                placeholder="Název události…"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                autoFocus
-              />
+              <input className="form-input title-inp" type="text" placeholder="Název události…" value={title} onChange={e => setTitle(e.target.value)} autoFocus />
 
               <div className="date-range-row">
                 <input className="form-input date-inp" type="date" value={date} onChange={e => setDate(e.target.value)} />
                 {multiDay && (
                   <>
                     <span className="date-range-sep">→</span>
-                    <input
-                      className="form-input date-inp"
-                      type="date"
-                      value={endDate}
-                      min={date}
-                      onChange={e => setEndDate(e.target.value)}
-                    />
+                    <input className="form-input date-inp" type="date" value={endDate} min={date} onChange={e => setEndDate(e.target.value)} />
                   </>
                 )}
               </div>
@@ -810,69 +893,41 @@ function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent,
                     <span className="time-toggle-knob" />
                   </button>
                   <span className="time-toggle-label" onClick={() => setUseTime(v => !v)}>Konkrétní čas</span>
-                  {useTime && (
-                    <input className="form-input time-inp" type="time" step="900" value={time} onChange={e => setTime(e.target.value)} />
-                  )}
+                  {useTime && <input className="form-input time-inp" type="time" step="900" value={time} onChange={e => setTime(e.target.value)} />}
                 </div>
               )}
 
               {!multiDay && useTime && (
                 <div className="duration-row">
                   {[30, 60, 120, 240].map(m => (
-                    <button
-                      key={m}
-                      className={`duration-btn ${duration === m ? 'sel' : ''}`}
-                      onClick={() => setDuration(m)}
-                    >
+                    <button key={m} className={`duration-btn ${duration === m ? 'sel' : ''}`} onClick={() => setDuration(m)}>
                       {m < 60 ? `${m} min` : `${m / 60} hod`}
                     </button>
                   ))}
-                  <button
-                    className={`duration-btn ${duration === 0 ? 'sel' : ''}`}
-                    onClick={() => setDuration(0)}
-                  >
-                    Celý den
-                  </button>
+                  <button className={`duration-btn ${duration === 0 ? 'sel' : ''}`} onClick={() => setDuration(0)}>Celý den</button>
                 </div>
               )}
 
               <div className="repeat-row">
                 {REPEAT_OPTIONS.map(o => (
-                  <button key={o.value} className={`repeat-btn ${repeat === o.value ? 'sel' : ''}`}
-                    onClick={() => setRepeat(o.value)}>
-                    {o.label}
-                  </button>
+                  <button key={o.value} className={`repeat-btn ${repeat === o.value ? 'sel' : ''}`} onClick={() => setRepeat(o.value)}>{o.label}</button>
                 ))}
               </div>
 
               {!showNote ? (
                 <button className="btn-add-note" onClick={() => setShowNote(true)}>+ Přidat poznámku</button>
               ) : (
-                <textarea
-                  className="form-input note-inp"
-                  placeholder="Poznámka…"
-                  value={note}
-                  onChange={e => setNote(e.target.value)}
-                  rows={2}
-                  autoFocus
-                />
+                <textarea className="form-input note-inp" placeholder="Poznámka…" value={note} onChange={e => setNote(e.target.value)} rows={2} autoFocus />
               )}
             </div>
 
             <div className="wizard-footer" style={{ paddingBottom: kbH > 0 ? kbH + 12 + 'px' : undefined }}>
-              <div className="wizard-dots">
-                <span className="dot" /><span className="dot active" />
-              </div>
+              <div className="wizard-dots"><span className="dot" /><span className="dot active" /></div>
               <div className="wizard-actions">
                 {!editId && title.trim() && (
                   <button className="btn-tmpl" onClick={handleSaveTemplate}>☆</button>
                 )}
-                <button
-                  className="btn-add"
-                  style={{ '--c': MEMBERS[member].color }}
-                  onClick={handleSave}
-                  disabled={!title.trim() || saving}
-                >
+                <button className="btn-add" style={{ '--c': MEMBERS[member].color }} onClick={handleSave} disabled={!title.trim() || saving}>
                   {saving ? '…' : editId ? 'Uložit' : 'Přidat'}
                 </button>
               </div>
