@@ -1,116 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- White full-bleed background (maskable for Android) -->
-  <rect width="512" height="512" fill="white"/>
 
-  <!-- ── Calendar card ── -->
-  <rect x="40" y="40" width="432" height="440" rx="56" fill="#F0FDF4"/>
-  <rect x="36" y="36" width="432" height="440" rx="56" fill="white" stroke="#DCFCE7" stroke-width="6"/>
+  <!-- Full-bleed green background (required for maskable / Android adaptive icons) -->
+  <rect width="512" height="512" fill="#16A34A"/>
 
-  <!-- Green header -->
-  <rect x="36"  y="36"  width="432" height="124" rx="56" fill="#16A34A"/>
-  <rect x="36"  y="128" width="432" height="32"   fill="#16A34A"/>
+  <!-- Card drop-shadow for depth -->
+  <rect x="96" y="120" width="328" height="294" rx="28" fill="rgba(0,0,0,0.18)"/>
+
+  <!-- Calendar card (white) -->
+  <rect x="88" y="112" width="328" height="292" rx="28" fill="white"/>
+
+  <!-- Dark-green header -->
+  <rect x="88" y="112" width="328" height="96" rx="28" fill="#14532d"/>
+  <!-- fill the header bottom corners so header blends into card body -->
+  <rect x="88" y="180" width="328" height="28" fill="#14532d"/>
 
   <!-- Binding rings -->
-  <rect x="154" y="12" width="28" height="72" rx="14" fill="#15803D"/>
-  <rect x="330" y="12" width="28" height="72" rx="14" fill="#15803D"/>
+  <rect x="164" y="80" width="30" height="76" rx="15" fill="#86efac"/>
+  <rect x="318" y="80" width="30" height="76" rx="15" fill="#86efac"/>
 
-  <!-- Header: month name -->
-  <text x="256" y="103" text-anchor="middle" dominant-baseline="middle"
-        font-family="system-ui,-apple-system,sans-serif"
-        font-weight="800" font-size="38" fill="white" letter-spacing="3">VERNOUŠČÍ</text>
+  <!-- "V" initial (Vernerovi) in header -->
+  <text x="256" y="150"
+        text-anchor="middle" dominant-baseline="middle"
+        font-family="Georgia,'Times New Roman',serif"
+        font-weight="900" font-size="56" fill="white">V</text>
 
-  <!-- ══════════════════════════════════════════════════════
-       FAMILY FIGURES inside calendar body (y: 160 – 476)
-       ══════════════════════════════════════════════════════ -->
+  <!--
+    Heart = two overlapping circles (bumps) + downward triangle (point).
+    All the same green as the background → shows as a "window" through the white card.
+  -->
+  <circle cx="206" cy="292" r="64" fill="#16A34A"/>
+  <circle cx="306" cy="292" r="64" fill="#16A34A"/>
+  <polygon points="144,318 368,318 256,408" fill="#16A34A"/>
 
-  <!-- ── ELIŠKA (left) ── -->
-  <!-- Blue shirt -->
-  <ellipse cx="138" cy="490" rx="70" ry="44" fill="#60A5FA"/>
-  <!-- White collar -->
-  <path d="M100 452 Q138 472 176 452 Q166 478 138 480 Q110 478 100 452Z" fill="white"/>
-  <!-- Long blonde hair sides -->
-  <path d="M80  182 Q68 260 70 360 Q76 374 96  368 Q86 268 90  182Z" fill="#EAB308"/>
-  <path d="M196 182 Q208 260 206 360 Q200 374 180 368 Q190 268 186 182Z" fill="#EAB308"/>
-  <!-- Hair back center -->
-  <ellipse cx="138" cy="364" rx="44" ry="18" fill="#EAB308"/>
-  <!-- Face -->
-  <circle cx="138" cy="282" r="66" fill="#FFD5A8"/>
-  <!-- Hair top cap -->
-  <path d="M74 262 Q74 180 138 178 Q202 180 202 262 Q194 204 138 202 Q82 204 74 262Z" fill="#EAB308"/>
-  <!-- Ears -->
-  <ellipse cx="72"  cy="282" rx="12" ry="15" fill="#FBBF8C"/>
-  <ellipse cx="204" cy="282" rx="12" ry="15" fill="#FBBF8C"/>
-  <!-- Arched brows -->
-  <path d="M108 252 Q120 242 132 250" stroke="#92700A" stroke-width="6" stroke-linecap="round" fill="none"/>
-  <path d="M144 250 Q156 242 168 252" stroke="#92700A" stroke-width="6" stroke-linecap="round" fill="none"/>
-  <!-- Eyes — large green -->
-  <circle cx="118" cy="272" r="16" fill="#16803D"/>
-  <circle cx="158" cy="272" r="16" fill="#16803D"/>
-  <circle cx="118" cy="272" r="9"  fill="#0F1A0F"/>
-  <circle cx="158" cy="272" r="9"  fill="#0F1A0F"/>
-  <circle cx="123" cy="266" r="5"  fill="white"/>
-  <circle cx="163" cy="266" r="5"  fill="white"/>
-  <!-- Smile -->
-  <path d="M112 302 Q138 322 164 302" stroke="#C06050" stroke-width="8" stroke-linecap="round" fill="none"/>
-  <!-- Blush -->
-  <ellipse cx="90"  cy="290" rx="18" ry="11" fill="#FFB0C8" opacity="0.55"/>
-  <ellipse cx="186" cy="290" rx="18" ry="11" fill="#FFB0C8" opacity="0.55"/>
-
-  <!-- ── PAVEL (right) ── -->
-  <!-- Green shirt -->
-  <ellipse cx="374" cy="490" rx="70" ry="44" fill="#16A34A"/>
-  <!-- Hair base -->
-  <ellipse cx="374" cy="242" rx="68" ry="52" fill="#B07840"/>
-  <!-- Face -->
-  <circle cx="374" cy="282" r="66" fill="#FFD5A8"/>
-  <!-- Hair top -->
-  <path d="M308 266 Q308 182 374 180 Q440 182 440 266 Q432 208 374 206 Q316 208 308 266Z" fill="#B07840"/>
-  <!-- Ears -->
-  <ellipse cx="308" cy="282" rx="12" ry="15" fill="#FBBF8C"/>
-  <ellipse cx="440" cy="282" rx="12" ry="15" fill="#FBBF8C"/>
-  <!-- Brows -->
-  <path d="M344 252 Q356 242 368 250" stroke="#7A5020" stroke-width="6" stroke-linecap="round" fill="none"/>
-  <path d="M380 250 Q392 242 404 252" stroke="#7A5020" stroke-width="6" stroke-linecap="round" fill="none"/>
-  <!-- Eyes — brown -->
-  <circle cx="354" cy="272" r="16" fill="#5C3D1A"/>
-  <circle cx="394" cy="272" r="16" fill="#5C3D1A"/>
-  <circle cx="354" cy="272" r="9"  fill="#0F0A05"/>
-  <circle cx="394" cy="272" r="9"  fill="#0F0A05"/>
-  <circle cx="359" cy="266" r="5"  fill="white"/>
-  <circle cx="399" cy="266" r="5"  fill="white"/>
-  <!-- Smile -->
-  <path d="M348 302 Q374 322 400 302" stroke="#C06050" stroke-width="8" stroke-linecap="round" fill="none"/>
-
-  <!-- ── FILIP (center, child — slightly lower & smaller) ── -->
-  <!-- Yellow shirt -->
-  <ellipse cx="256" cy="494" rx="60" ry="38" fill="#CA8A04"/>
-  <!-- Fluffy blonde hair -->
-  <ellipse cx="256" cy="368" rx="56" ry="46" fill="#F0C430"/>
-  <ellipse cx="224" cy="356" rx="24" ry="20" fill="#F0C430"/>
-  <ellipse cx="288" cy="356" rx="24" ry="20" fill="#F0C430"/>
-  <ellipse cx="256" cy="346" rx="28" ry="18" fill="#F0C430"/>
-  <!-- Face -->
-  <circle cx="256" cy="392" r="58" fill="#FFD5A8"/>
-  <!-- Hair top -->
-  <path d="M200 378 Q200 318 256 316 Q312 318 312 378 Q304 336 256 334 Q208 336 200 378Z" fill="#F0C430"/>
-  <!-- Ears -->
-  <ellipse cx="198" cy="392" rx="11" ry="14" fill="#FBBF8C"/>
-  <ellipse cx="314" cy="392" rx="11" ry="14" fill="#FBBF8C"/>
-  <!-- Eyes — bigger for child -->
-  <circle cx="238" cy="384" r="16" fill="#3A6EA5"/>
-  <circle cx="274" cy="384" r="16" fill="#3A6EA5"/>
-  <circle cx="238" cy="384" r="9"  fill="#0F0A05"/>
-  <circle cx="274" cy="384" r="9"  fill="#0F0A05"/>
-  <circle cx="243" cy="378" r="5"  fill="white"/>
-  <circle cx="279" cy="378" r="5"  fill="white"/>
-  <!-- Big smile -->
-  <path d="M232 412 Q256 434 280 412" stroke="#C06050" stroke-width="8" stroke-linecap="round" fill="none"/>
-  <!-- Rosy cheeks -->
-  <ellipse cx="212" cy="400" rx="18" ry="11" fill="#FFB0C8" opacity="0.6"/>
-  <ellipse cx="300" cy="400" rx="18" ry="11" fill="#FFB0C8" opacity="0.6"/>
-
-  <!-- Clip overflow at calendar bottom edge -->
-  <rect x="36" y="464" width="432" height="50" fill="white"/>
-  <rect x="36" y="456" width="6"   height="20" fill="white"/>
-  <rect x="470" y="456" width="6"  height="20" fill="white"/>
 </svg>
