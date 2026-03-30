@@ -391,9 +391,18 @@ function ChoresCalendar({ state, calYear, setCalYear, calMonth, setCalMonth, cal
 
   function plannedInMonth(chore) {
     const last = lastDone(history, chore.id);
-    if (!last) return new Set();
     const res = new Set();
     const daysInM = new Date(calYear, calMonth + 1, 0).getDate();
+    if (!last) {
+      // Never done: show today and every freq days after
+      const base = todayDate();
+      for (let day = 1; day <= daysInM; day++) {
+        const d = new Date(calYear, calMonth, day); d.setHours(0,0,0,0);
+        const diff = Math.round((d - base) / 86400000);
+        if (diff >= 0 && diff % chore.freq === 0) res.add(day);
+      }
+      return res;
+    }
     for (let day = 1; day <= daysInM; day++) {
       const d = new Date(calYear, calMonth, day); d.setHours(0,0,0,0);
       const diff = Math.round((d - last) / 86400000);

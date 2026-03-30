@@ -383,6 +383,14 @@ input  { font: inherit; }
 }
 
 /* ── Calendar ─────────────────────────────────────────────── */
+@keyframes cal-slide-next {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes cal-slide-prev {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
 .calendar-wrap {
   flex: 1;
   padding: 12px;
@@ -390,6 +398,8 @@ input  { font: inherit; }
   width: 100%;
   margin: 0 auto;
 }
+.calendar-wrap.anim-next { animation: cal-slide-next .18s ease; }
+.calendar-wrap.anim-prev { animation: cal-slide-prev .18s ease; }
 
 .cal-grid {
   display: grid;
@@ -435,7 +445,6 @@ input  { font: inherit; }
   font-weight: 600;
   color: #475569;
   line-height: 1;
-  margin-bottom: 2px;
 }
 .today-num {
   width: 20px;
@@ -447,6 +456,25 @@ input  { font: inherit; }
   align-items: center;
   justify-content: center;
   font-size: .72rem;
+}
+
+/* Day number row with status icons */
+.cell-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+  min-height: 20px;
+}
+.cell-statuses {
+  display: flex;
+  gap: 1px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.cell-status-icon {
+  font-size: .7rem;
+  line-height: 1;
 }
 
 /* Desktop event chips */
@@ -648,6 +676,32 @@ input  { font: inherit; }
 .icon-btn.del:hover { background: #FECACA; color: #B91C1C; }
 
 .no-events { padding: 8px 16px 12px; color: #CBD5E1; font-size: .85rem; text-align: center; }
+
+/* ── Day status quick-set ─────────────────────────────────── */
+.day-status-section { padding: 10px 16px 4px; border-top: 1px solid var(--border); }
+.status-quick-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.status-quick-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--surface-2);
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.status-quick-btn:hover { border-color: var(--border-2); background: var(--surface); }
+.status-quick-btn.sel   { border-color: var(--c); background: var(--l); }
+[data-theme="dark"] .status-quick-btn { background: var(--surface); border-color: var(--border); }
+[data-theme="dark"] .status-quick-btn.sel { background: var(--surface-2); }
 
 /* ── Modal list mode ──────────────────────────────────────── */
 .modal-list { padding: 0 0 8px; }

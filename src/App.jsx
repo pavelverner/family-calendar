@@ -136,6 +136,7 @@ export default function App() {
   const [showStatusPicker, setShowStatusPicker] = useState(false);
   const [filters,          setFilters]          = useState(new Set(Object.keys(MEMBERS)));
   const [view,             setView]             = useState('month'); // 'month' | 'week' | 'chores'
+  const [animDir,          setAnimDir]          = useState('next');
   const [dark, setDark] = useDarkMode();
 
   useEffect(() => onAuthStateChanged(auth, u => setUser(u ?? null)), []);
@@ -146,7 +147,16 @@ export default function App() {
     const u2 = onSnapshot(collection(db, 'templates'), snap => setTemplates(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
     const u3 = onSnapshot(collection(db, 'statuses'),  snap => {
       const map = {};
-      snap.docs.forEach(d => { map[d.id] = d.data(); });
+      snap.docs.forEach(d => {
+        const data = d.data();
+        const sep = d.id.indexOf('_');
+        if (sep > 0) {
+          const mk = d.id.slice(0, sep);
+          const ds = d.id.slice(sep + 1);
+          if (!map[mk]) map[mk] = {};
+          map[mk][ds] = data;
+        }
+      });
       setStatuses(map);
     });
     return () => { u1(); u2(); u3(); };
@@ -184,21 +194,34 @@ export default function App() {
   async function addTemplate(data)       { await addDoc(collection(db, 'templates'), data); }
   async function deleteTemplate(id)      { await deleteDoc(doc(db, 'templates', id)); }
 
+  async function saveStatusForDate(statusKey, detail = '', forDate = todayStr()) {
+    const docId = `${currentMemberKey}_${forDate}`;
+    if (statusKey === 'none') {
+      await deleteDoc(doc(db, 'statuses', docId));
+    } else {
+      await setDoc(doc(db, 'statuses', docId), {
+        member: currentMemberKey,
+        date: forDate,
+        status: statusKey,
+        detail,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  }
+
   async function saveStatus(statusKey, detail = '') {
-    await setDoc(doc(db, 'statuses', currentMemberKey), {
-      status: statusKey,
-      detail,
-      updatedAt: new Date().toISOString(),
-    });
+    await saveStatusForDate(statusKey, detail);
     setShowStatusPicker(false);
   }
 
   // Header nav
   function navPrev() {
+    setAnimDir('prev');
     if (view === 'week') setCurDate(d => { const n = new Date(d); n.setDate(n.getDate() - 7); return n; });
     else setCurDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1));
   }
   function navNext() {
+    setAnimDir('next');
     if (view === 'week') setCurDate(d => { const n = new Date(d); n.setDate(n.getDate() + 7); return n; });
     else setCurDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1));
   }
@@ -216,7 +239,7 @@ export default function App() {
   const month = curDate.getMonth();
   const calDays = getCalendarDays(year, month);
 
-  const myStatus   = statuses[currentMemberKey];
+  const myStatus   = statuses[currentMemberKey]?.[today];
   const myStatusDef = STATUSES.find(s => s.key === myStatus?.status);
 
   return (
@@ -286,7 +309,7 @@ export default function App() {
             </button>
           )}
           {Object.entries(MEMBERS).map(([key, m]) => {
-            const st = statuses[key];
+            const st = statuses[key]?.[today];
             const stDef = STATUSES.find(s => s.key === st?.status);
             return (
               <button
@@ -314,6 +337,8 @@ export default function App() {
           calDays={calDays}
           eventsForDay={eventsForDay}
           today={today}
+          statuses={statuses}
+          animDir={animDir}
           onOpenDay={openDay}
           onOpenEvent={openEvent}
           onUpdateEvent={updateEvent}
@@ -351,6 +376,9 @@ export default function App() {
           events={selectedDay ? events.filter(e => isEventOnDate(e, selectedDay)) : []}
           templates={templates}
           defaultMember={currentMemberKey}
+          currentMemberKey={currentMemberKey}
+          statusForDay={selectedDay ? statuses[currentMemberKey]?.[selectedDay] : null}
+          onSetStatus={(key, detail) => saveStatusForDate(key, detail, selectedDay)}
           initialEditEvent={initialEditEvent}
           onAdd={addEvent}
           onDelete={deleteEvent}
@@ -434,12 +462,14 @@ function StatusPicker({ currentKey, currentDetail, memberKey, onSave, onClose })
 
 // ── Month View ────────────────────────────────────────────────────────────────
 
-function MonthView({ calDays, eventsForDay, today, onOpenDay, onOpenEvent, onUpdateEvent, navPrev, navNext }) {
+function MonthView({ calDays, eventsForDay, today, statuses, animDir, onOpenDay, onOpenEvent, onUpdateEvent, navPrev, navNext }) {
   const [dragOverDs, setDragOverDs] = useState(null);
   const swipe = useSwipe(navNext, navPrev);
+  const firstDay = calDays.find(d => d.current);
+  const animKey = firstDay ? toDateStr(firstDay.date).slice(0, 7) : '';
 
   return (
-    <main className="calendar-wrap" {...swipe}>
+    <main className={`calendar-wrap anim-${animDir}`} key={animKey} {...swipe}>
       <div className="cal-grid">
         {DAYS_CZ.map(d => <div key={d} className="cal-head">{d}</div>)}
 
@@ -462,7 +492,18 @@ function MonthView({ calDays, eventsForDay, today, onOpenDay, onOpenEvent, onUpd
                 if (id) await onUpdateEvent(id, { date: ds });
               }}
             >
-              <span className={`day-num ${isToday ? 'today-num' : ''}`}>{date.getDate()}</span>
+              <div className="cell-top-row">
+                <span className={`day-num ${isToday ? 'today-num' : ''}`}>{date.getDate()}</span>
+                <div className="cell-statuses">
+                  {Object.entries(MEMBERS).map(([k]) => {
+                    const s = statuses[k]?.[ds];
+                    if (!s || !s.status || s.status === 'none') return null;
+                    const def = STATUSES.find(st => st.key === s.status);
+                    if (!def) return null;
+                    return <span key={k} className="cell-status-icon" title={`${MEMBERS[k].name}: ${def.label}`} style={{ color: MEMBERS[k].color }}>{def.emoji}</span>;
+                  })}
+                </div>
+              </div>
               <div className="cell-events">
                 {dayEvts.slice(0, 3).map(e => {
                   const pos = multiDayPos(e, ds);
@@ -473,7 +514,7 @@ function MonthView({ calDays, eventsForDay, today, onOpenDay, onOpenEvent, onUpd
                       style={{ background: MEMBERS[e.member].color }}
                       draggable={!e.repeat || e.repeat === 'none'}
                       onDragStart={ev => { ev.dataTransfer.setData('eventId', e.id); ev.stopPropagation(); }}
-                      onClick={ev => { ev.stopPropagation(); onOpenEvent(e); }}
+                      onClick={ev => { ev.stopPropagation(); dayEvts.length > 1 ? onOpenDay(ds) : onOpenEvent(e); }}
                       title={`${MEMBERS[e.member].name}: ${e.time ? e.time + ' ' : ''}${e.title}`}
                     >
                       {pos !== 'mid' && <span className="ev-cat">{CATEGORIES[e.category || 'none']?.icon}</span>}
@@ -683,7 +724,7 @@ function UpcomingEvents({ events, filters, onOpenDay }) {
 
 // ── Day Modal (wizard) ────────────────────────────────────────────────────────
 
-function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent, onAdd, onDelete, onUpdate, onAddTemplate, onDeleteTemplate, onClose }) {
+function DayModal({ dateStr, events, templates, defaultMember, currentMemberKey, statusForDay, onSetStatus, initialEditEvent, onAdd, onDelete, onUpdate, onAddTemplate, onDeleteTemplate, onClose }) {
   const kbH = useKeyboardHeight();
   const [mode,     setMode]     = useState((initialEditEvent || !dateStr) ? 'step1' : 'list');
   const [editId,   setEditId]   = useState(initialEditEvent?.id ?? null);
@@ -756,7 +797,7 @@ function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent,
   }
 
   const hdrTitle = mode === 'list' ? dateLabel
-    : editId ? 'Upravit událost' : 'Nová událost';
+    : editId ? (title.trim() || 'Upravit událost') : 'Nová událost';
 
   const hdrLeft = mode !== 'list' && (
     <button className="back-btn" onClick={() => mode === 'step2' ? setMode('step1') : setMode('list')}>←</button>
@@ -819,6 +860,23 @@ function DayModal({ dateStr, events, templates, defaultMember, initialEditEvent,
 
             {sorted.length === 0 && templates.length === 0 && (
               <p className="no-events">Žádné události tento den.</p>
+            )}
+
+            {dateStr && currentMemberKey && (
+              <div className="day-status-section">
+                <p className="section-label">Kde jsem?</p>
+                <div className="status-quick-row">
+                  {STATUSES.filter(s => s.key !== 'none').map(s => (
+                    <button
+                      key={s.key}
+                      className={`status-quick-btn ${statusForDay?.status === s.key ? 'sel' : ''}`}
+                      style={statusForDay?.status === s.key ? { '--c': MEMBERS[currentMemberKey].color, '--l': MEMBERS[currentMemberKey].light } : {}}
+                      title={s.label}
+                      onClick={() => onSetStatus(statusForDay?.status === s.key ? 'none' : s.key)}
+                    >{s.emoji || '✕'}</button>
+                  ))}
+                </div>
+              </div>
             )}
 
             <div className="list-footer">
