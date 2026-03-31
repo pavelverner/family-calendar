@@ -355,41 +355,24 @@ export default function App() {
           </div>
         </div>
 
-        {/* Nav only for calendar views */}
-        {view !== 'chores' && (
-          <div className="header-row2">
-            <div className="view-toggle">
-              <button className={view === 'month' ? 'active' : ''} onClick={() => setView('month')}>Měsíc</button>
-              <button className={view === 'week'  ? 'active' : ''} onClick={() => setView('week')}>Týden</button>
-            </div>
+        {/* View toggle + nav */}
+        <div className="header-row2">
+          <div className="view-toggle">
+            <button className={view === 'month'  ? 'active' : ''} onClick={() => setView('month')}>Měsíc</button>
+            <button className={view === 'week'   ? 'active' : ''} onClick={() => setView('week')}>Týden</button>
+            <button className={view === 'chores' ? 'active' : ''} onClick={() => setView('chores')}>Domácnost</button>
+          </div>
+          {view !== 'chores' && (
             <nav className="month-nav">
               <button onClick={navPrev}>‹</button>
               <span>{navLabel()}</span>
               <button onClick={navNext}>›</button>
             </nav>
-          </div>
-        )}
-
-        {/* View toggle (always visible) */}
-        {view === 'chores' && (
-          <div className="header-row2">
-            <div className="view-toggle">
-              <button onClick={() => setView('month')}>Měsíc</button>
-              <button onClick={() => setView('week')}>Týden</button>
-              <button className="active">Domácnost</button>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {view !== 'chores' && (
           <div className="filter-chips">
-            <button
-              className="filter-chip chores-view-chip"
-              onClick={() => setView('chores')}
-              title="Domácí práce"
-            >
-              🏠 Domácnost
-            </button>
             {Object.entries(MEMBERS).map(([key, m]) => {
               const st = statuses[key]?.[today];
               const stDef = STATUSES.find(s => s.key === st?.status);

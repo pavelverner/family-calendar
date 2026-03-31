@@ -1591,6 +1591,8 @@ input[type="time"].form-input {
 
 .chores-cal-body { display: grid; grid-template-columns: repeat(7,1fr); }
 .chores-cal-cell {
+  min-width: 0;
+  overflow: hidden;
   border-right: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   min-height: 80px;
@@ -1611,8 +1613,8 @@ input[type="time"].form-input {
 .chores-cal-pills { display: flex; flex-direction: column; gap: 2px; }
 .chores-cal-pill {
   font-size: .55rem; font-weight: 700; padding: 1px 3px; border-radius: 3px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  display: flex; align-items: center; gap: 2px;
+  white-space: normal; word-break: break-word;
+  display: flex; align-items: flex-start; gap: 2px;
 }
 .chores-cal-pill.pill-done    { opacity: .5; text-decoration: line-through; }
 .chores-cal-pill.pill-overdue { border: 1.5px dashed currentColor; }

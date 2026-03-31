@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { db } from './firebase';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -59,11 +61,17 @@ function lastDone(history, id) {
   return new Date(h[0]);
 }
 
+function parseLocalDate(str) {
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
 function daysUntilDue(history, chore) {
   const last = lastDone(history, chore.id);
   const t = todayDate();
-  if (!last) return 0;
-  const next = new Date(last);
+  const base = last ?? (chore.startDate ? parseLocalDate(chore.startDate) : null);
+  if (!base) return 0;
+  const next = new Date(base);
   next.setDate(next.getDate() + chore.freq);
   next.setHours(0,0,0,0);
   return Math.round((next - t) / 86400000);
@@ -108,6 +116,8 @@ function dnyText(n) {
 
 // ── State hook ────────────────────────────────────────────────────────────────
 
+const CHORES_DOC = 'chores/shared';
+
 function useChoresState() {
   const [state, setState] = useState(() => {
     try {
@@ -120,9 +130,29 @@ function useChoresState() {
     };
   });
 
+  useEffect(() => {
+    const ref = doc(db, 'chores', 'shared');
+    const unsub = onSnapshot(ref, snapshot => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        setState(data);
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+      } else {
+        const initial = {
+          chores: DEFAULTS.map(c => ({...c})),
+          history: Object.fromEntries(DEFAULTS.map(c => [c.id, []])),
+        };
+        setDoc(ref, initial);
+      }
+    });
+    return unsub;
+  }, []);
+
   function persist(newState) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
     setState(newState);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(newState)); } catch(e) {}
+    const ref = doc(db, 'chores', 'shared');
+    setDoc(ref, newState).catch(err => console.error('Chores save error:', err));
   }
 
   function complete(id) {
@@ -393,19 +423,21 @@ function ChoresCalendar({ state, calYear, setCalYear, calMonth, setCalMonth, cal
     const last = lastDone(history, chore.id);
     const res = new Set();
     const daysInM = new Date(calYear, calMonth + 1, 0).getDate();
-    if (!last) {
-      // Never done: show today and every freq days after
-      const base = todayDate();
+    const base = last ?? (chore.startDate ? parseLocalDate(chore.startDate) : null);
+    if (!base) {
+      // Never done, no start date: show today and every freq days after
+      const start = todayDate();
       for (let day = 1; day <= daysInM; day++) {
         const d = new Date(calYear, calMonth, day); d.setHours(0,0,0,0);
-        const diff = Math.round((d - base) / 86400000);
+        const diff = Math.round((d - start) / 86400000);
         if (diff >= 0 && diff % chore.freq === 0) res.add(day);
       }
       return res;
     }
+    const baseDay = new Date(base); baseDay.setHours(0,0,0,0);
     for (let day = 1; day <= daysInM; day++) {
       const d = new Date(calYear, calMonth, day); d.setHours(0,0,0,0);
-      const diff = Math.round((d - last) / 86400000);
+      const diff = Math.round((d - baseDay) / 86400000);
       if (diff > 0 && diff % chore.freq === 0) res.add(day);
     }
     return res;
@@ -573,6 +605,7 @@ function ChoreModal({ chore, onSave, onCancel }) {
     return known.includes(String(chore.freq)) ? String(chore.freq) : 'custom';
   });
   const [freqCustom, setFreqCustom] = useState(chore?.freq || 7);
+  const [startDate,  setStartDate]  = useState(chore?.startDate || '');
   const nameRef = useRef(null);
 
   useEffect(() => { nameRef.current?.focus(); }, []);
@@ -581,7 +614,7 @@ function ChoreModal({ chore, onSave, onCancel }) {
     const trimmed = name.trim();
     if (!trimmed) { nameRef.current?.focus(); return; }
     const freq = freqVal === 'custom' ? (parseInt(freqCustom) || 7) : parseInt(freqVal);
-    onSave({ name: trimmed, floor, emoji, freq });
+    onSave({ name: trimmed, floor, emoji, freq, startDate: startDate || null });
   }
 
   return (
@@ -651,6 +684,16 @@ function ChoreModal({ chore, onSave, onCancel }) {
             />
           </div>
         )}
+
+        <div className="chores-form-group">
+          <label className="chores-label">Startovací datum <span style={{fontWeight:400,color:'var(--text-3)',fontSize:'.8em'}}>(odkud počítat)</span></label>
+          <input
+            className="chores-input"
+            type="date"
+            value={startDate}
+            onChange={e => setStartDate(e.target.value)}
+          />
+        </div>
 
         <div className="chores-modal-actions">
           <button className="chores-btn chores-btn-neutral" onClick={onCancel}>Zrušit</button>
