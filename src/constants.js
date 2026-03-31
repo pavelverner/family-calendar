@@ -36,11 +36,11 @@ export const REPEAT_OPTIONS = [
 ];
 
 export const STATUSES = [
-  { key: 'none',       emoji: '',   label: 'Zrušit status',   detail: false },
-  { key: 'rano',       emoji: '🌅', label: 'Ranní',           detail: false },
-  { key: 'odp',        emoji: '🌆', label: 'Odpolední',       detail: false },
-  { key: 'boleslav',   emoji: '🏭', label: 'Boleslav',        detail: false },
-  { key: 'afi',        emoji: '🏢', label: 'AFI',             detail: false },
-  { key: 'greencode',  emoji: '💻', label: 'Green:Code',      detail: false },
-  { key: 'away',       emoji: '✈️', label: 'Pryč',            detail: true  },
+  { key: 'none',       emoji: '',    label: 'Zrušit status',   detail: false },
+  { key: 'rano',       emoji: '🌅',  label: 'Ranní',           detail: false },
+  { key: 'odp',        emoji: '🌇',  label: 'Odpolední',       detail: false },
+  { key: 'boleslav',   emoji: '🏭',  label: 'Boleslav',        detail: false, iconKey: 'boleslav' },
+  { key: 'afi',        emoji: '🏙️', label: 'AFI',             detail: false, iconKey: 'afi' },
+  { key: 'greencode',  emoji: '🏢',  label: 'Green:Code',      detail: false },
+  { key: 'away',       emoji: '✈️',  label: 'Pryč',            detail: true  },
 ];

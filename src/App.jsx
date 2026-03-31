@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, memo } from 'react';
 
 function useKeyboardHeight() {
   const [kbH, setKbH] = useState(0);
@@ -55,6 +55,88 @@ import { MEMBERS, DAYS_CZ, MONTHS_CZ, CATEGORIES, REPEAT_OPTIONS, USER_EMAILS, S
 import Login from './Login';
 import { EliskaAvatar, PavelAvatar, FilipAvatar, VsichniAvatar } from './Avatars';
 import ChoresView from './Chores';
+import { STATUS_ICON_COMPONENTS } from './StatusIcons';
+
+// Render either a custom SVG icon or an emoji for a status definition
+function StatusIcon({ statusDef, size = 22, className = '' }) {
+  if (!statusDef) return null;
+  const Comp = statusDef.iconKey && STATUS_ICON_COMPONENTS[statusDef.iconKey];
+  if (Comp) return <Comp size={size} />;
+  if (statusDef.emoji) return <span className={className}>{statusDef.emoji}</span>;
+  return null;
+}
+
+// ── Drum-roll time picker ──────────────────────────────────────────────────────
+
+const DrumPicker = memo(function DrumPicker({ items, value, onChange, itemH = 52, fontSize = '2rem' }) {
+  const scrollRef = useRef(null);
+  const settling  = useRef(false);
+  const timerRef  = useRef(null);
+
+  // Sync scroll to value when NOT user-scrolling
+  useEffect(() => {
+    if (settling.current) return;
+    const idx = items.indexOf(value);
+    if (scrollRef.current && idx >= 0) {
+      scrollRef.current.scrollTop = idx * itemH;
+    }
+  }, [value, items, itemH]);
+
+  function handleScroll() {
+    settling.current = true;
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      settling.current = false;
+      if (!scrollRef.current) return;
+      const idx = Math.round(scrollRef.current.scrollTop / itemH);
+      const clamped = Math.max(0, Math.min(items.length - 1, idx));
+      onChange(items[clamped]);
+    }, 180);
+  }
+
+  return (
+    <div className="drum-outer" style={{ height: 3 * itemH + 'px' }}>
+      <div
+        ref={scrollRef}
+        className="drum-scroll"
+        onScroll={handleScroll}
+        style={{ height: '100%', overflowY: 'scroll', scrollSnapType: 'y mandatory', scrollbarWidth: 'none' }}
+      >
+        <div style={{ height: itemH + 'px', flexShrink: 0 }} />
+        {items.map(item => (
+          <div
+            key={item}
+            className={`drum-item ${item === value ? 'sel' : ''}`}
+            style={{ height: itemH + 'px', scrollSnapAlign: 'center', fontSize, fontWeight: item === value ? 800 : 500 }}
+          >
+            {String(item).padStart(2, '0')}
+          </div>
+        ))}
+        <div style={{ height: itemH + 'px', flexShrink: 0 }} />
+      </div>
+      <div className="drum-line" style={{ top: itemH + 'px' }} />
+      <div className="drum-line" style={{ top: 2 * itemH + 'px' }} />
+    </div>
+  );
+});
+
+const HOURS   = Array.from({ length: 24 }, (_, i) => i);
+const MINUTES = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+
+function TimePicker({ value, onChange }) {
+  const h = parseInt(value?.split(':')[0] ?? '13') || 0;
+  const m = parseInt(value?.split(':')[1] ?? '0')  || 0;
+  // Round m to nearest 5-minute slot
+  const mSnap = MINUTES.reduce((best, v) => Math.abs(v - m) < Math.abs(best - m) ? v : best, MINUTES[0]);
+
+  return (
+    <div className="drum-timepicker">
+      <DrumPicker items={HOURS}   value={h}     onChange={v => onChange(`${String(v).padStart(2,'0')}:${String(mSnap).padStart(2,'00')}`)} itemH={52} fontSize="2.2rem" />
+      <span className="drum-sep">:</span>
+      <DrumPicker items={MINUTES} value={mSnap} onChange={v => onChange(`${String(h).padStart(2,'0')}:${String(v).padStart(2,'00')}`)}     itemH={44} fontSize="1.6rem" />
+    </div>
+  );
+}
 
 const EMAIL_TO_KEY = Object.fromEntries(
   Object.entries(USER_EMAILS).map(([k, v]) => [v, k])
@@ -261,7 +343,9 @@ export default function App() {
                  <span style={{ color: '#fff', fontWeight: 800, fontSize: '.85rem' }}>{MEMBERS[currentMemberKey].name[0]}</span>}
               </div>
               {myStatusDef && myStatusDef.key !== 'none' && (
-                <span className="user-status-badge">{myStatusDef.emoji}</span>
+                <span className="user-status-badge">
+                  <StatusIcon statusDef={myStatusDef} size={14} />
+                </span>
               )}
             </button>
             <button className="theme-btn" onClick={() => setDark(d => !d)} title="Tmavý režim">
@@ -297,9 +381,8 @@ export default function App() {
           </div>
         )}
 
-        <div className="filter-chips">
-          {/* Domácnost chip in view-toggle style when not in chores */}
-          {view !== 'chores' && (
+        {view !== 'chores' && (
+          <div className="filter-chips">
             <button
               className="filter-chip chores-view-chip"
               onClick={() => setView('chores')}
@@ -307,28 +390,28 @@ export default function App() {
             >
               🏠 Domácnost
             </button>
-          )}
-          {Object.entries(MEMBERS).map(([key, m]) => {
-            const st = statuses[key]?.[today];
-            const stDef = STATUSES.find(s => s.key === st?.status);
-            return (
-              <button
-                key={key}
-                className={`filter-chip ${filters.has(key) ? 'on' : 'off'}`}
-                style={{ '--c': m.color, '--l': m.light }}
-                onClick={() => toggleFilter(key)}
-              >
-                <span className="chip-dot" />
-                {m.name}
-                {stDef && stDef.key !== 'none' && (
-                  <span className="chip-status" title={stDef.label + (st?.detail ? ` – ${st.detail}` : '')}>
-                    {stDef.emoji}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+            {Object.entries(MEMBERS).map(([key, m]) => {
+              const st = statuses[key]?.[today];
+              const stDef = STATUSES.find(s => s.key === st?.status);
+              return (
+                <button
+                  key={key}
+                  className={`filter-chip ${filters.has(key) ? 'on' : 'off'}`}
+                  style={{ '--c': m.color, '--l': m.light }}
+                  onClick={() => toggleFilter(key)}
+                >
+                  <span className="chip-dot" />
+                  {m.name}
+                  {stDef && stDef.key !== 'none' && (
+                    <span className="chip-status" title={stDef.label + (st?.detail ? ` – ${st.detail}` : '')}>
+                      <StatusIcon statusDef={stDef} size={14} />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </header>
 
       {/* ── Views ── */}
@@ -430,7 +513,9 @@ function StatusPicker({ currentKey, currentDetail, memberKey, onSave, onClose })
                 style={selected === s.key ? { '--c': MEMBERS[memberKey].color, '--l': MEMBERS[memberKey].light } : {}}
                 onClick={() => setSelected(s.key)}
               >
-                {s.emoji && <span className="status-opt-emoji">{s.emoji}</span>}
+                {(s.emoji || s.iconKey) && (
+                  <span className="status-opt-emoji"><StatusIcon statusDef={s} size={24} /></span>
+                )}
                 <span className="status-opt-label">{s.label}</span>
               </button>
             ))}
@@ -464,9 +549,65 @@ function StatusPicker({ currentKey, currentDetail, memberKey, onSave, onClose })
 
 function MonthView({ calDays, eventsForDay, today, statuses, animDir, onOpenDay, onOpenEvent, onUpdateEvent, navPrev, navNext }) {
   const [dragOverDs, setDragOverDs] = useState(null);
-  const swipe = useSwipe(navNext, navPrev);
-  const firstDay = calDays.find(d => d.current);
-  const animKey = firstDay ? toDateStr(firstDay.date).slice(0, 7) : '';
+  const swipe      = useSwipe(navNext, navPrev);
+  const touchRef   = useRef({ eventId: null, active: false });
+  const updateRef  = useRef(onUpdateEvent);
+  const firstDay   = calDays.find(d => d.current);
+  const animKey    = firstDay ? toDateStr(firstDay.date).slice(0, 7) : '';
+
+  useEffect(() => { updateRef.current = onUpdateEvent; }, [onUpdateEvent]);
+
+  // Document-level touch move/end for drag
+  useEffect(() => {
+    function onMove(e) {
+      const t = touchRef.current;
+      if (!t.eventId) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - t.startX;
+      const dy = touch.clientY - t.startY;
+      if (!t.active && Math.sqrt(dx * dx + dy * dy) > 8) {
+        t.active = true;
+        const g = t.el.cloneNode(true);
+        Object.assign(g.style, {
+          position: 'fixed', left: t.rect.left + 'px', top: t.rect.top + 'px',
+          width: t.rect.width + 'px', height: t.rect.height + 'px',
+          opacity: '0.75', pointerEvents: 'none', zIndex: '9999', transition: 'none',
+        });
+        document.body.appendChild(g);
+        t.ghost = g;
+      }
+      if (t.active) {
+        e.preventDefault();
+        t.ghost.style.transform = `translate(${dx}px,${dy}px)`;
+        t.ghost.style.display = 'none';
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        t.ghost.style.display = '';
+        setDragOverDs(el?.closest('[data-date]')?.dataset.date || null);
+      }
+    }
+    function onEnd(e) {
+      const t = touchRef.current;
+      if (!t.eventId) return;
+      if (t.active) {
+        const touch = e.changedTouches[0];
+        t.ghost.style.display = 'none';
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        t.ghost.style.display = '';
+        const targetDs = el?.closest('[data-date]')?.dataset.date;
+        if (targetDs) updateRef.current(t.eventId, { date: targetDs });
+        document.body.removeChild(t.ghost);
+      }
+      touchRef.current = { eventId: null, active: false };
+      setDragOverDs(null);
+    }
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+    return () => {
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+      if (touchRef.current.ghost) try { document.body.removeChild(touchRef.current.ghost); } catch {}
+    };
+  }, []);
 
   return (
     <main className={`calendar-wrap anim-${animDir}`} key={animKey} {...swipe}>
@@ -481,6 +622,7 @@ function MonthView({ calDays, eventsForDay, today, statuses, animDir, onOpenDay,
           return (
             <div
               key={i}
+              data-date={ds}
               className={`cal-cell ${!current ? 'dim' : ''} ${isToday ? 'today' : ''} ${dragOverDs === ds ? 'drag-over' : ''}`}
               onClick={() => onOpenDay(ds)}
               onDragOver={e => { e.preventDefault(); setDragOverDs(ds); }}
@@ -500,20 +642,34 @@ function MonthView({ calDays, eventsForDay, today, statuses, animDir, onOpenDay,
                     if (!s || !s.status || s.status === 'none') return null;
                     const def = STATUSES.find(st => st.key === s.status);
                     if (!def) return null;
-                    return <span key={k} className="cell-status-icon" title={`${MEMBERS[k].name}: ${def.label}`} style={{ color: MEMBERS[k].color }}>{def.emoji}</span>;
+                    return (
+                      <span key={k} className="cell-status-icon" title={`${MEMBERS[k].name}: ${def.label}`}>
+                        <StatusIcon statusDef={def} size={13} />
+                      </span>
+                    );
                   })}
                 </div>
               </div>
               <div className="cell-events">
                 {dayEvts.slice(0, 3).map(e => {
                   const pos = multiDayPos(e, ds);
+                  const draggable = !e.repeat || e.repeat === 'none';
                   return (
                     <div
                       key={e.id}
                       className={`cell-event ${pos ? `md-${pos}` : ''}`}
                       style={{ background: MEMBERS[e.member].color }}
-                      draggable={!e.repeat || e.repeat === 'none'}
+                      draggable={draggable}
                       onDragStart={ev => { ev.dataTransfer.setData('eventId', e.id); ev.stopPropagation(); }}
+                      onTouchStart={ev => {
+                        ev.stopPropagation();
+                        if (!draggable) return;
+                        const rect = ev.currentTarget.getBoundingClientRect();
+                        touchRef.current = {
+                          eventId: e.id, el: ev.currentTarget, rect, active: false,
+                          startX: ev.touches[0].clientX, startY: ev.touches[0].clientY,
+                        };
+                      }}
                       onClick={ev => { ev.stopPropagation(); dayEvts.length > 1 ? onOpenDay(ds) : onOpenEvent(e); }}
                       title={`${MEMBERS[e.member].name}: ${e.time ? e.time + ' ' : ''}${e.title}`}
                     >
@@ -541,10 +697,10 @@ function MonthView({ calDays, eventsForDay, today, statuses, animDir, onOpenDay,
 
 // ── Week View ─────────────────────────────────────────────────────────────────
 
-const HOUR_H     = 56;
-const START_HOUR = 6;
-const END_HOUR   = 22;
-const HOURS = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => i + START_HOUR);
+const HOUR_H      = 56;
+const START_HOUR  = 6;
+const END_HOUR    = 22;
+const WEEK_HOURS  = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => i + START_HOUR);
 
 function timeToY(time) {
   const [h, m] = time.split(':').map(Number);
@@ -604,7 +760,7 @@ function WeekView({ events, filters, curDate, today, onOpenDay, onOpenEvent, onU
 
         <div className="wv-grid" style={{ height: (END_HOUR - START_HOUR) * HOUR_H + 'px' }}>
           <div className="wv-gutter wv-time-axis">
-            {HOURS.map(h => (
+            {WEEK_HOURS.map(h => (
               <div key={h} className="wv-time-label" style={{ top: (h - START_HOUR) * HOUR_H + 'px' }}>
                 {h}:00
               </div>
@@ -625,7 +781,7 @@ function WeekView({ events, filters, curDate, today, onOpenDay, onOpenEvent, onU
                 if (id) await onUpdateEvent(id, { date: ds });
               }}
             >
-              {HOURS.map(h => (
+              {WEEK_HOURS.map(h => (
                 <div key={h} className="wv-hline" style={{ top: (h - START_HOUR) * HOUR_H + 'px' }} />
               ))}
               {ds === today && <CurrentTimeLine />}
@@ -864,7 +1020,12 @@ function DayModal({ dateStr, events, templates, defaultMember, currentMemberKey,
 
             {dateStr && currentMemberKey && (
               <div className="day-status-section">
-                <p className="section-label">Kde jsem?</p>
+                <p className="section-label">
+                  Kde jsem?
+                  {statusForDay?.status && statusForDay.status !== 'none' && (
+                    <button className="status-clear-btn" title="Zrušit status" onClick={() => onSetStatus('none')}>✕</button>
+                  )}
+                </p>
                 <div className="status-quick-row">
                   {STATUSES.filter(s => s.key !== 'none').map(s => (
                     <button
@@ -873,7 +1034,9 @@ function DayModal({ dateStr, events, templates, defaultMember, currentMemberKey,
                       style={statusForDay?.status === s.key ? { '--c': MEMBERS[currentMemberKey].color, '--l': MEMBERS[currentMemberKey].light } : {}}
                       title={s.label}
                       onClick={() => onSetStatus(statusForDay?.status === s.key ? 'none' : s.key)}
-                    >{s.emoji || '✕'}</button>
+                    >
+                      <StatusIcon statusDef={s} size={20} />
+                    </button>
                   ))}
                 </div>
               </div>
@@ -951,8 +1114,10 @@ function DayModal({ dateStr, events, templates, defaultMember, currentMemberKey,
                     <span className="time-toggle-knob" />
                   </button>
                   <span className="time-toggle-label" onClick={() => setUseTime(v => !v)}>Konkrétní čas</span>
-                  {useTime && <input className="form-input time-inp" type="time" step="900" value={time} onChange={e => setTime(e.target.value)} />}
                 </div>
+              )}
+              {!multiDay && useTime && (
+                <TimePicker value={time} onChange={setTime} />
               )}
 
               {!multiDay && useTime && (
