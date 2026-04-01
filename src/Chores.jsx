@@ -66,14 +66,30 @@ function parseLocalDate(str) {
   return new Date(y, m - 1, d);
 }
 
+function isCompletedToday(history, id) {
+  const h = history[id];
+  if (!h || !h.length) return false;
+  const last = new Date(h[0]);
+  const t = todayDate();
+  return last >= t && last < new Date(t.getTime() + 86400000);
+}
+
 function daysUntilDue(history, chore) {
   const last = lastDone(history, chore.id);
   const t = todayDate();
-  const base = last ?? (chore.startDate ? parseLocalDate(chore.startDate) : null);
-  if (!base) return 0;
+  if (last) {
+    const base = new Date(last); base.setHours(0,0,0,0);
+    const next = new Date(base);
+    next.setDate(next.getDate() + chore.freq);
+    return Math.round((next - t) / 86400000);
+  }
+  if (!chore.startDate) return 0;
+  const base = parseLocalDate(chore.startDate);
+  const diffFromBase = Math.round((t - base) / 86400000);
+  // Find the next occurrence on or after today (never goes overdue for startDate-only)
+  const n = Math.max(1, Math.ceil(diffFromBase / chore.freq));
   const next = new Date(base);
-  next.setDate(next.getDate() + chore.freq);
-  next.setHours(0,0,0,0);
+  next.setDate(next.getDate() + n * chore.freq);
   return Math.round((next - t) / 86400000);
 }
 
@@ -191,8 +207,6 @@ export default function ChoresView() {
   const [deleteModal, setDeleteModal] = useState(null); // null | choreId
   const [calYear,     setCalYear]     = useState(() => new Date().getFullYear());
   const [calMonth,    setCalMonth]    = useState(() => new Date().getMonth());
-  const [calFilter,   setCalFilter]   = useState('all');
-  const [collapsed,   setCollapsed]   = useState({ horni: false, dolni: false });
 
   const toastTimer = useRef(null);
   function showToast(msg) {
@@ -235,8 +249,6 @@ export default function ChoresView() {
           <ChoresDashboard
             state={state}
             onComplete={handleComplete}
-            collapsed={collapsed}
-            setCollapsed={setCollapsed}
           />
         )}
         {tab === 'calendar' && (
@@ -244,7 +256,6 @@ export default function ChoresView() {
             state={state}
             calYear={calYear} setCalYear={setCalYear}
             calMonth={calMonth} setCalMonth={setCalMonth}
-            calFilter={calFilter} setCalFilter={setCalFilter}
           />
         )}
         {tab === 'manage' && (
@@ -288,8 +299,29 @@ export default function ChoresView() {
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 
-function ChoresDashboard({ state, onComplete, collapsed, setCollapsed }) {
+function ChoresDashboard({ state, onComplete }) {
   const { chores, history } = state;
+
+  const dueNow = useMemo(() =>
+    chores
+      .filter(c => { const u = urgency(history, c); return u === 'overdue' || u === 'today'; })
+      .sort((a, b) => urgencyOrder(history, a) - urgencyOrder(history, b)),
+    [chores, history]
+  );
+
+  const tomorrowList = useMemo(() =>
+    chores
+      .filter(c => urgency(history, c) === 'soon')
+      .sort((a, b) => a.name.localeCompare(b.name, 'cs')),
+    [chores, history]
+  );
+
+  const doneTodayList = useMemo(() =>
+    chores
+      .filter(c => isCompletedToday(history, c.id))
+      .sort((a, b) => a.name.localeCompare(b.name, 'cs')),
+    [chores, history]
+  );
 
   const totals = useMemo(() => {
     let over = 0, soon = 0, ok = 0;
@@ -302,13 +334,10 @@ function ChoresDashboard({ state, onComplete, collapsed, setCollapsed }) {
     return { over, soon, ok };
   }, [chores, history]);
 
-  function toggleFloor(floor) {
-    setCollapsed(prev => ({ ...prev, [floor]: !prev[floor] }));
-  }
+  const allEmpty = dueNow.length === 0 && tomorrowList.length === 0 && doneTodayList.length === 0;
 
   return (
     <div>
-      {/* Summary */}
       <div className="chores-summary">
         <div className="chores-sum-card s-red">
           <div className="chores-sum-num">{totals.over}</div>
@@ -324,80 +353,83 @@ function ChoresDashboard({ state, onComplete, collapsed, setCollapsed }) {
         </div>
       </div>
 
-      {/* Floors */}
-      {['horni', 'dolni'].map(floor => {
-        const floorChores = chores
-          .filter(c => c.floor === floor)
-          .sort((a, b) => urgencyOrder(history, a) - urgencyOrder(history, b));
+      {allEmpty && (
+        <div className="chores-all-ok">
+          <span>✅</span>
+          <span>Vše je v pořádku! Žádné úkoly dnes ani zítra.</span>
+        </div>
+      )}
 
-        let fo = 0, fs = 0, fk = 0;
-        floorChores.forEach(c => {
-          const u = urgency(history, c);
-          if (u === 'overdue') fo++;
-          else if (u === 'today' || u === 'soon') fs++;
-          else fk++;
-        });
-
-        return (
-          <div key={floor} className="chores-floor-section">
-            <div className={`chores-floor-hdr ${floor}`} onClick={() => toggleFloor(floor)}>
-              <span className="chores-floor-icon">{floor === 'horni' ? '🔼' : '🔽'}</span>
-              <span className="chores-floor-name">{floor === 'horni' ? 'Horní podlaží' : 'Dolní podlaží'}</span>
-              <div className="chores-floor-stats">
-                {fo > 0 && <span className="chores-fstat red">{fo} po termínu</span>}
-                {fs > 0 && <span className="chores-fstat yellow">{fs} dnes/zítra</span>}
-                {fk > 0 && <span className="chores-fstat green">{fk} OK</span>}
-              </div>
-              <span className="chores-floor-arrow">{collapsed[floor] ? '▼' : '▲'}</span>
-            </div>
-
-            {!collapsed[floor] && (
-              <div className="chores-floor-body">
-                {floorChores.length === 0 && (
-                  <p className="chores-empty-floor">Žádné činnosti v tomto podlaží.</p>
-                )}
-                {floorChores.map(c => (
-                  <ChoreCard key={c.id} chore={c} history={history} chores={chores} onComplete={onComplete} />
-                ))}
-              </div>
-            )}
+      {dueNow.length > 0 && (
+        <div className="chores-section">
+          <div className="chores-section-hdr hdr-red">Dnes &amp; Po termínu</div>
+          <div className="chores-floor-body">
+            {dueNow.map(c => (
+              <ChoreCard key={c.id} chore={c} history={history} chores={chores} onComplete={onComplete} />
+            ))}
           </div>
-        );
-      })}
+        </div>
+      )}
+
+      {tomorrowList.length > 0 && (
+        <div className="chores-section">
+          <div className="chores-section-hdr hdr-yellow">Zítra</div>
+          <div className="chores-floor-body">
+            {tomorrowList.map(c => (
+              <ChoreCard key={c.id} chore={c} history={history} chores={chores} onComplete={onComplete} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {doneTodayList.length > 0 && (
+        <div className="chores-section">
+          <div className="chores-section-hdr hdr-green">Splněno dnes</div>
+          <div className="chores-floor-body">
+            {doneTodayList.map(c => (
+              <ChoreCard key={c.id} chore={c} history={history} chores={chores} onComplete={onComplete} done />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function ChoreCard({ chore, history, chores, onComplete }) {
+function ChoreCard({ chore, history, chores, onComplete, done = false }) {
   const u    = urgency(history, chore);
   const d    = daysUntilDue(history, chore);
   const last = lastDone(history, chore.id);
 
   let badgeTxt, badgeCls;
-  if (u === 'overdue')     { badgeTxt = `${Math.abs(d)} ${dnyText(d)} po termínu`; badgeCls = 'badge-overdue'; }
-  else if (u === 'today')  { badgeTxt = 'Dnes!';                                    badgeCls = 'badge-today'; }
-  else if (u === 'soon')   { badgeTxt = 'Zítra';                                    badgeCls = 'badge-soon'; }
-  else                     { badgeTxt = `Za ${d} ${dnyText(d)}`;                    badgeCls = 'badge-ok'; }
+  if (done)                { badgeTxt = 'Splněno';                                   badgeCls = 'badge-done'; }
+  else if (u === 'overdue'){ badgeTxt = `${Math.abs(d)} ${dnyText(d)} po termínu`;  badgeCls = 'badge-overdue'; }
+  else if (u === 'today')  { badgeTxt = 'Dnes!';                                     badgeCls = 'badge-today'; }
+  else if (u === 'soon')   { badgeTxt = 'Zítra';                                     badgeCls = 'badge-soon'; }
+  else                     { badgeTxt = `Za ${d} ${dnyText(d)}`;                     badgeCls = 'badge-ok'; }
+
+  const floorLabel = chore.floor === 'horni' ? '🔼 Horní' : '🔽 Dolní';
 
   return (
-    <div className={`chores-card u-${u}`}>
+    <div className={`chores-card u-${done ? 'done' : u}`}>
       <div className="chores-card-icon">{chore.emoji || '🏠'}</div>
       <div className="chores-card-body">
         <div className="chores-card-name">{chore.name}</div>
         <div className="chores-card-meta">
+          <span className="chores-floor-tag">{floorLabel}</span>
           <span>Každých {chore.freq} dní</span>
           <span>{last ? `Naposledy: ${fmtDt(last.toISOString())}` : 'Ještě nesplněno'}</span>
         </div>
       </div>
       <span className={`chores-badge ${badgeCls}`}>{badgeTxt}</span>
-      <button className="chores-done-btn" onClick={() => onComplete(chore.id)}>✓ Splnit</button>
+      {!done && <button className="chores-done-btn" onClick={() => onComplete(chore.id)}>✓ Splnit</button>}
     </div>
   );
 }
 
 // ── Calendar ──────────────────────────────────────────────────────────────────
 
-function ChoresCalendar({ state, calYear, setCalYear, calMonth, setCalMonth, calFilter, setCalFilter }) {
+function ChoresCalendar({ state, calYear, setCalYear, calMonth, setCalMonth }) {
   const { chores, history } = state;
   const today = todayDate();
 
@@ -423,18 +455,23 @@ function ChoresCalendar({ state, calYear, setCalYear, calMonth, setCalMonth, cal
     const last = lastDone(history, chore.id);
     const res = new Set();
     const daysInM = new Date(calYear, calMonth + 1, 0).getDate();
-    const base = last ?? (chore.startDate ? parseLocalDate(chore.startDate) : null);
-    if (!base) {
-      // Never done, no start date: show today and every freq days after
-      const start = todayDate();
+
+    let baseDay;
+    if (last) {
+      baseDay = new Date(last); baseDay.setHours(0,0,0,0);
+    } else if (chore.startDate) {
+      baseDay = parseLocalDate(chore.startDate); baseDay.setHours(0,0,0,0);
+    } else {
+      // No base: use today, show today + every freq days
+      baseDay = todayDate();
       for (let day = 1; day <= daysInM; day++) {
         const d = new Date(calYear, calMonth, day); d.setHours(0,0,0,0);
-        const diff = Math.round((d - start) / 86400000);
+        const diff = Math.round((d - baseDay) / 86400000);
         if (diff >= 0 && diff % chore.freq === 0) res.add(day);
       }
       return res;
     }
-    const baseDay = new Date(base); baseDay.setHours(0,0,0,0);
+
     for (let day = 1; day <= daysInM; day++) {
       const d = new Date(calYear, calMonth, day); d.setHours(0,0,0,0);
       const diff = Math.round((d - baseDay) / 86400000);
@@ -443,8 +480,7 @@ function ChoresCalendar({ state, calYear, setCalYear, calMonth, setCalMonth, cal
     return res;
   }
 
-  const filtered = chores.filter(c => calFilter === 'all' || c.floor === calFilter);
-  const data = filtered.map(c => ({
+  const data = chores.map(c => ({
     chore: c,
     col: colorFor(chores, c),
     done: completedInMonth(c),
@@ -501,17 +537,6 @@ function ChoresCalendar({ state, calYear, setCalYear, calMonth, setCalMonth, cal
 
   return (
     <div>
-      {/* Floor filter */}
-      <div className="chores-cal-filter">
-        {[['all','Vše'], ['horni','🔼 Horní'], ['dolni','🔽 Dolní']].map(([val, lbl]) => (
-          <button
-            key={val}
-            className={`chores-filter-btn ${val} ${calFilter === val ? 'active' : ''}`}
-            onClick={() => setCalFilter(val)}
-          >{lbl}</button>
-        ))}
-      </div>
-
       {/* Nav */}
       <div className="chores-cal-nav">
         <button className="chores-nav-btn" onClick={prevMonth}>←</button>
@@ -575,6 +600,7 @@ function ChoresManage({ state, onEdit, onDelete, onAdd }) {
                   <div className="chores-manage-name">{c.name}</div>
                   <div className="chores-manage-freq">
                     Každých {c.freq} dní · splněno {(history[c.id] || []).length}×
+                    {c.startDate && <span> · od {c.startDate}</span>}
                   </div>
                 </div>
                 <div className="chores-manage-actions">

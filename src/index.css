@@ -1286,8 +1286,9 @@ input[type="time"].form-input {
 
   .fab { bottom: 16px; right: 14px; width: 50px; height: 50px; font-size: 1.5rem; }
 
-  /* Larger nav buttons */
-  .view-toggle button { padding: 7px 14px; font-size: .85rem; }
+  /* View toggle — prevent overflow on small screens */
+  .view-toggle { overflow-x: auto; flex-shrink: 1; min-width: 0; }
+  .view-toggle button { padding: 7px 10px; font-size: .82rem; white-space: nowrap; }
   .month-nav button   { width: 38px; height: 38px; font-size: 1.4rem; }
   .month-nav span     { font-size: .85rem; min-width: 100px; }
 
@@ -1485,6 +1486,34 @@ input[type="time"].form-input {
 .chores-sum-card.s-yellow .chores-sum-num { color: #d69e2e; }
 .chores-sum-card.s-green  .chores-sum-num { color: #38a169; }
 
+/* Dashboard sections */
+.chores-section { margin-bottom: 20px; }
+.chores-section-hdr {
+  padding: 8px 12px; border-radius: 10px; margin-bottom: 8px;
+  font-weight: 800; font-size: .82rem; letter-spacing: .01em;
+}
+.chores-section-hdr.hdr-red    { background: #fed7d7; color: #c53030; }
+.chores-section-hdr.hdr-yellow { background: #fefcbf; color: #975a16; }
+.chores-section-hdr.hdr-green  { background: #c6f6d5; color: #276749; }
+[data-theme="dark"] .chores-section-hdr.hdr-red    { background: rgba(197,48,48,.2);   color: #fc8181; }
+[data-theme="dark"] .chores-section-hdr.hdr-yellow { background: rgba(214,158,46,.2);  color: #f6e05e; }
+[data-theme="dark"] .chores-section-hdr.hdr-green  { background: rgba(56,161,105,.2);  color: #68d391; }
+
+.chores-all-ok {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 32px 16px;
+  background: var(--surface); border-radius: 12px;
+  color: var(--text-2); font-size: .9rem; font-weight: 600;
+  box-shadow: 0 1px 3px var(--shadow);
+}
+
+/* Floor tag on card */
+.chores-floor-tag {
+  display: inline-flex; align-items: center;
+  font-size: .62rem; font-weight: 700; padding: 1px 5px; border-radius: 99px;
+  background: var(--surface-2); color: var(--text-3);
+}
+
 /* Floor sections */
 .chores-floor-section { margin-bottom: 22px; }
 
@@ -1532,12 +1561,14 @@ input[type="time"].form-input {
 .chores-card.u-today   { border-left-color: #c05621; background: #fffaf0; }
 .chores-card.u-soon    { border-left-color: #d69e2e; background: #fffff0; }
 .chores-card.u-ok      { border-left-color: #38a169; background: #f0fff4; }
+.chores-card.u-done    { border-left-color: #38a169; background: #f0fff4; opacity: .7; }
 
 [data-theme="dark"] .chores-card { background: var(--surface); }
 [data-theme="dark"] .chores-card.u-overdue { background: rgba(197,48,48,.12); }
 [data-theme="dark"] .chores-card.u-today   { background: rgba(192,86,33,.12); }
 [data-theme="dark"] .chores-card.u-soon    { background: rgba(214,158,46,.12); }
 [data-theme="dark"] .chores-card.u-ok      { background: rgba(56,161,105,.12); }
+[data-theme="dark"] .chores-card.u-done    { background: rgba(56,161,105,.08); }
 
 .chores-card-icon  { font-size: 1.35rem; flex-shrink: 0; width: 32px; text-align: center; }
 .chores-card-body  { flex: 1; min-width: 0; }
@@ -1549,6 +1580,7 @@ input[type="time"].form-input {
 .badge-today   { background: #feebc8; color: #c05621; }
 .badge-soon    { background: #fefcbf; color: #975a16; }
 .badge-ok      { background: #c6f6d5; color: #276749; }
+.badge-done    { background: #c6f6d5; color: #276749; }
 
 .chores-done-btn {
   background: #1a202c; color: #fff;
