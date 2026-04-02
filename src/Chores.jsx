@@ -74,6 +74,17 @@ function isCompletedToday(history, id) {
   return last >= t && last < new Date(t.getTime() + 86400000);
 }
 
+// Same logic as plannedInMonth but checks a single target date
+function isPlannedOn(history, chore, targetDate) {
+  const last = lastDone(history, chore.id);
+  let base;
+  if (last) { base = new Date(last); base.setHours(0,0,0,0); }
+  else if (chore.startDate) { base = parseLocalDate(chore.startDate); }
+  else { base = todayDate(); }
+  const diff = Math.round((targetDate - base) / 86400000);
+  return diff > 0 && diff % chore.freq === 0;
+}
+
 function daysUntilDue(history, chore) {
   const last = lastDone(history, chore.id);
   const t = todayDate();
@@ -317,11 +328,15 @@ function ChoresDashboard({ state, onComplete }) {
     [chores, history]
   );
 
+  const tomorrow = useMemo(() => {
+    const t = todayDate(); const d = new Date(t); d.setDate(d.getDate() + 1); return d;
+  }, []);
+
   const tomorrowList = useMemo(() =>
     chores
-      .filter(c => urgency(history, c) === 'soon')
+      .filter(c => isPlannedOn(history, c, tomorrow) && !isCompletedToday(history, c.id))
       .sort((a, b) => a.name.localeCompare(b.name, 'cs')),
-    [chores, history]
+    [chores, history, tomorrow]
   );
 
   const okList = useMemo(() =>
@@ -332,15 +347,17 @@ function ChoresDashboard({ state, onComplete }) {
   );
 
   const totals = useMemo(() => {
-    let dueToday = 0, tomorrow = 0, ok = 0;
+    let dueToday = 0, tmrw = 0, ok = 0;
     chores.forEach(c => {
       const u = urgency(history, c);
-      if (u === 'overdue' || u === 'today' || isCompletedToday(history, c.id)) dueToday++;
-      else if (u === 'soon') tomorrow++;
+      const done = isCompletedToday(history, c.id);
+      const plannedTmrw = isPlannedOn(history, c, tomorrow);
+      if (done || u === 'overdue' || u === 'today') dueToday++;
+      else if (plannedTmrw) tmrw++;
       else ok++;
     });
-    return { dueToday, tomorrow, ok };
-  }, [chores, history]);
+    return { dueToday, tomorrow: tmrw, ok };
+  }, [chores, history, tomorrow]);
 
   function toggleFilter(key) {
     setFilter(f => f === key ? null : key);
