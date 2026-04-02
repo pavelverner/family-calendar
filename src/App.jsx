@@ -13,16 +13,20 @@ function useKeyboardHeight() {
   return kbH;
 }
 
-function useSwipe(onLeft, onRight, minDist = 55) {
+function useSwipe(onLeft, onRight, minDist = 55, maxMs = 650) {
   const startX = useRef(null);
   const startY = useRef(null);
+  const startT = useRef(0);
   return {
     onTouchStart: e => {
       startX.current = e.touches[0].clientX;
       startY.current = e.touches[0].clientY;
+      startT.current = Date.now();
     },
     onTouchEnd: e => {
       if (startX.current === null) return;
+      // Ignore if touch lasted too long (= long-press drag, not swipe)
+      if (Date.now() - startT.current > maxMs) { startX.current = null; return; }
       const dx = startX.current - e.changedTouches[0].clientX;
       const dy = Math.abs(startY.current - e.changedTouches[0].clientY);
       if (Math.abs(dx) > minDist && Math.abs(dx) > dy) {
@@ -358,9 +362,8 @@ export default function App() {
         {/* View toggle + nav */}
         <div className="header-row2">
           <div className="view-toggle">
-            <button className={view === 'month'  ? 'active' : ''} onClick={() => setView('month')}>Měsíc</button>
-            <button className={view === 'week'   ? 'active' : ''} onClick={() => setView('week')}>Týden</button>
-            <button className={view === 'chores' ? 'active' : ''} onClick={() => setView('chores')}>Domácnost</button>
+            <button className={view === 'month' ? 'active' : ''} onClick={() => setView('month')}>Měsíc</button>
+            <button className={view === 'week'  ? 'active' : ''} onClick={() => setView('week')}>Týden</button>
           </div>
           {view !== 'chores' && (
             <nav className="month-nav">
@@ -370,6 +373,12 @@ export default function App() {
             </nav>
           )}
         </div>
+        <button
+          className={`chores-row-btn ${view === 'chores' ? 'active' : ''}`}
+          onClick={() => setView('chores')}
+        >
+          🏠 Domácnost
+        </button>
 
         {view !== 'chores' && (
           <div className="filter-chips">
@@ -551,15 +560,15 @@ function MonthView({ calDays, eventsForDay, today, statuses, animDir, onOpenDay,
 
       if (!t.eventId) {
         // Long-press not yet fired — cancel if user is swiping
-        if (t.timer && Math.sqrt(dx * dx + dy * dy) > 10) {
+        if (t.timer && Math.sqrt(dx * dx + dy * dy) > 12) {
           clearTimeout(t.timer);
           t.el.classList.remove('drag-pressing');
-          touchRef.current = { eventId: null, active: false, timer: null, el: null };
+          touchRef.current = { eventId: null, active: false, timer: null, el: null, sid: -1 };
         }
         return;
       }
 
-      if (!t.active && Math.sqrt(dx * dx + dy * dy) > 8) {
+      if (!t.active && Math.sqrt(dx * dx + dy * dy) > 14) {
         t.active = true;
         t.el.classList.remove('drag-pressing');
         const g = t.el.cloneNode(true);
@@ -661,7 +670,7 @@ function MonthView({ calDays, eventsForDay, today, statuses, animDir, onOpenDay,
                       draggable={draggable}
                       onDragStart={ev => { ev.dataTransfer.setData('eventId', e.id); ev.stopPropagation(); }}
                       onTouchStart={ev => {
-                        ev.stopPropagation();
+                        // No stopPropagation — lets useSwipe on parent track startX too
                         if (!draggable) return;
                         const rect = ev.currentTarget.getBoundingClientRect();
                         const el = ev.currentTarget;
@@ -670,11 +679,14 @@ function MonthView({ calDays, eventsForDay, today, statuses, animDir, onOpenDay,
                         clearTimeout(touchRef.current.timer);
                         if (touchRef.current.el) touchRef.current.el.classList.remove('drag-pressing');
                         el.classList.add('drag-pressing');
+                        const sid = Date.now();
                         const timer = setTimeout(() => {
+                          if (touchRef.current.sid !== sid) return;
                           touchRef.current.eventId = e.id;
                           touchRef.current.timer = null;
+                          if (navigator.vibrate) navigator.vibrate(50);
                         }, 500);
-                        touchRef.current = { eventId: null, el, rect, active: false, startX, startY, timer };
+                        touchRef.current = { eventId: null, el, rect, active: false, startX, startY, timer, sid };
                       }}
                       onClick={ev => { ev.stopPropagation(); dayEvts.length > 1 ? onOpenDay(ds) : onOpenEvent(e); }}
                       title={`${MEMBERS[e.member].name}: ${e.time ? e.time + ' ' : ''}${e.title}`}
