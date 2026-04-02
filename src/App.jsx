@@ -533,23 +533,35 @@ function StatusPicker({ currentKey, currentDetail, memberKey, onSave, onClose })
 function MonthView({ calDays, eventsForDay, today, statuses, animDir, onOpenDay, onOpenEvent, onUpdateEvent, navPrev, navNext }) {
   const [dragOverDs, setDragOverDs] = useState(null);
   const swipe      = useSwipe(navNext, navPrev);
-  const touchRef   = useRef({ eventId: null, active: false });
+  const touchRef   = useRef({ eventId: null, active: false, timer: null, el: null });
   const updateRef  = useRef(onUpdateEvent);
   const firstDay   = calDays.find(d => d.current);
   const animKey    = firstDay ? toDateStr(firstDay.date).slice(0, 7) : '';
 
   useEffect(() => { updateRef.current = onUpdateEvent; }, [onUpdateEvent]);
 
-  // Document-level touch move/end for drag
+  // Document-level touch move/end for drag (requires long-press to activate)
   useEffect(() => {
     function onMove(e) {
       const t = touchRef.current;
-      if (!t.eventId) return;
+      if (!t.el) return;
       const touch = e.touches[0];
       const dx = touch.clientX - t.startX;
       const dy = touch.clientY - t.startY;
+
+      if (!t.eventId) {
+        // Long-press not yet fired — cancel if user is swiping
+        if (t.timer && Math.sqrt(dx * dx + dy * dy) > 10) {
+          clearTimeout(t.timer);
+          t.el.classList.remove('drag-pressing');
+          touchRef.current = { eventId: null, active: false, timer: null, el: null };
+        }
+        return;
+      }
+
       if (!t.active && Math.sqrt(dx * dx + dy * dy) > 8) {
         t.active = true;
+        t.el.classList.remove('drag-pressing');
         const g = t.el.cloneNode(true);
         Object.assign(g.style, {
           position: 'fixed', left: t.rect.left + 'px', top: t.rect.top + 'px',
@@ -570,8 +582,9 @@ function MonthView({ calDays, eventsForDay, today, statuses, animDir, onOpenDay,
     }
     function onEnd(e) {
       const t = touchRef.current;
-      if (!t.eventId) return;
-      if (t.active) {
+      if (t.timer) { clearTimeout(t.timer); t.timer = null; }
+      if (t.el) t.el.classList.remove('drag-pressing');
+      if (t.eventId && t.active) {
         const touch = e.changedTouches[0];
         t.ghost.style.display = 'none';
         const el = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -580,7 +593,7 @@ function MonthView({ calDays, eventsForDay, today, statuses, animDir, onOpenDay,
         if (targetDs) updateRef.current(t.eventId, { date: targetDs });
         document.body.removeChild(t.ghost);
       }
-      touchRef.current = { eventId: null, active: false };
+      touchRef.current = { eventId: null, active: false, timer: null, el: null };
       setDragOverDs(null);
     }
     document.addEventListener('touchmove', onMove, { passive: false });
@@ -588,7 +601,10 @@ function MonthView({ calDays, eventsForDay, today, statuses, animDir, onOpenDay,
     return () => {
       document.removeEventListener('touchmove', onMove);
       document.removeEventListener('touchend', onEnd);
-      if (touchRef.current.ghost) try { document.body.removeChild(touchRef.current.ghost); } catch {}
+      const t = touchRef.current;
+      if (t.timer) clearTimeout(t.timer);
+      if (t.el) t.el.classList.remove('drag-pressing');
+      if (t.ghost) try { document.body.removeChild(t.ghost); } catch {}
     };
   }, []);
 
@@ -648,10 +664,17 @@ function MonthView({ calDays, eventsForDay, today, statuses, animDir, onOpenDay,
                         ev.stopPropagation();
                         if (!draggable) return;
                         const rect = ev.currentTarget.getBoundingClientRect();
-                        touchRef.current = {
-                          eventId: e.id, el: ev.currentTarget, rect, active: false,
-                          startX: ev.touches[0].clientX, startY: ev.touches[0].clientY,
-                        };
+                        const el = ev.currentTarget;
+                        const startX = ev.touches[0].clientX;
+                        const startY = ev.touches[0].clientY;
+                        clearTimeout(touchRef.current.timer);
+                        if (touchRef.current.el) touchRef.current.el.classList.remove('drag-pressing');
+                        el.classList.add('drag-pressing');
+                        const timer = setTimeout(() => {
+                          touchRef.current.eventId = e.id;
+                          touchRef.current.timer = null;
+                        }, 500);
+                        touchRef.current = { eventId: null, el, rect, active: false, startX, startY, timer };
                       }}
                       onClick={ev => { ev.stopPropagation(); dayEvts.length > 1 ? onOpenDay(ds) : onOpenEvent(e); }}
                       title={`${MEMBERS[e.member].name}: ${e.time ? e.time + ' ' : ''}${e.title}`}

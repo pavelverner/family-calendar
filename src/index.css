@@ -978,6 +978,12 @@ input[type="time"].form-input {
 .drag-over { background: #EFF6FF !important; outline: 2px dashed #93C5FD; outline-offset: -2px; }
 .cell-event[draggable=true] { cursor: grab; }
 .cell-event[draggable=true]:active { cursor: grabbing; opacity: .8; }
+.cell-event.drag-pressing {
+  transform: scale(1.08);
+  box-shadow: 0 4px 14px rgba(0,0,0,.35);
+  transition: transform .5s ease, box-shadow .5s ease;
+  position: relative; z-index: 10;
+}
 
 
 /* ── Event extras ─────────────────────────────────────────── */
