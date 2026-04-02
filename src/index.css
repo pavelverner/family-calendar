@@ -974,29 +974,23 @@ input[type="time"].form-input {
 .view-toggle button.active { background: #2563EB; color: #fff; }
 .view-toggle button:not(.active):hover { background: #F1F5F9; }
 
-/* Domácnost row button (separate row below toggle) */
-.chores-row-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  margin-top: 6px;
-  padding: 6px 12px;
-  font-size: .82rem;
-  font-weight: 600;
-  color: var(--text-2);
-  background: var(--surface-2);
-  border: 1.5px solid var(--border);
+/* Domácnost icon button (in header-row2, right side) */
+.chores-icon-btn {
+  width: 32px; height: 32px;
   border-radius: 8px;
+  font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--border);
+  background: var(--surface-2);
+  flex-shrink: 0;
   cursor: pointer;
   transition: all .12s;
   -webkit-tap-highlight-color: transparent;
-  font-family: inherit;
+  margin-left: auto;
 }
-.chores-row-btn.active { background: #2563EB; color: #fff; border-color: #2563EB; }
-.chores-row-btn:not(.active):hover { background: var(--border); }
-[data-theme="dark"] .chores-row-btn { background: var(--surface-2); border-color: var(--border); }
-[data-theme="dark"] .chores-row-btn.active { background: #2563EB; border-color: #2563EB; }
+.chores-icon-btn.active { background: #2563EB; border-color: #2563EB; }
+.chores-icon-btn:not(.active):hover { background: var(--border); }
+[data-theme="dark"] .chores-icon-btn { background: var(--surface-2); border-color: var(--border); }
 
 /* ── Drag & drop ──────────────────────────────────────────── */
 .drag-over { background: #EFF6FF !important; outline: 2px dashed #93C5FD; outline-offset: -2px; }

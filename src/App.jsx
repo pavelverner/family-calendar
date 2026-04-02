@@ -372,13 +372,12 @@ export default function App() {
               <button onClick={navNext}>›</button>
             </nav>
           )}
+          <button
+            className={`chores-icon-btn ${view === 'chores' ? 'active' : ''}`}
+            onClick={() => setView('chores')}
+            title="Domácnost"
+          >🏠</button>
         </div>
-        <button
-          className={`chores-row-btn ${view === 'chores' ? 'active' : ''}`}
-          onClick={() => setView('chores')}
-        >
-          🏠 Domácnost
-        </button>
 
         {view !== 'chores' && (
           <div className="filter-chips">
