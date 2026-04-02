@@ -301,18 +301,12 @@ export default function ChoresView() {
 
 function ChoresDashboard({ state, onComplete }) {
   const { chores, history } = state;
+  const [filter, setFilter] = useState(null); // null | 'dueToday' | 'tomorrow' | 'ok'
 
   const dueNow = useMemo(() =>
     chores
       .filter(c => { const u = urgency(history, c); return u === 'overdue' || u === 'today'; })
       .sort((a, b) => urgencyOrder(history, a) - urgencyOrder(history, b)),
-    [chores, history]
-  );
-
-  const tomorrowList = useMemo(() =>
-    chores
-      .filter(c => urgency(history, c) === 'soon')
-      .sort((a, b) => a.name.localeCompare(b.name, 'cs')),
     [chores, history]
   );
 
@@ -323,55 +317,87 @@ function ChoresDashboard({ state, onComplete }) {
     [chores, history]
   );
 
+  const tomorrowList = useMemo(() =>
+    chores
+      .filter(c => urgency(history, c) === 'soon')
+      .sort((a, b) => a.name.localeCompare(b.name, 'cs')),
+    [chores, history]
+  );
+
+  const okList = useMemo(() =>
+    chores
+      .filter(c => urgency(history, c) === 'ok' && !isCompletedToday(history, c.id))
+      .sort((a, b) => daysUntilDue(history, a) - daysUntilDue(history, b)),
+    [chores, history]
+  );
+
   const totals = useMemo(() => {
-    let over = 0, soon = 0, ok = 0;
+    let dueToday = 0, tomorrow = 0, ok = 0;
     chores.forEach(c => {
       const u = urgency(history, c);
-      if (u === 'overdue') over++;
-      else if (u === 'today' || u === 'soon') soon++;
+      if (u === 'overdue' || u === 'today' || isCompletedToday(history, c.id)) dueToday++;
+      else if (u === 'soon') tomorrow++;
       else ok++;
     });
-    return { over, soon, ok };
+    return { dueToday, tomorrow, ok };
   }, [chores, history]);
 
-  const allEmpty = dueNow.length === 0 && tomorrowList.length === 0 && doneTodayList.length === 0;
+  function toggleFilter(key) {
+    setFilter(f => f === key ? null : key);
+  }
+
+  const showDueToday = filter === null || filter === 'dueToday';
+  const showTomorrow = filter === null || filter === 'tomorrow';
+  const showOk       = filter === 'ok';
 
   return (
     <div>
       <div className="chores-summary">
-        <div className="chores-sum-card s-red">
-          <div className="chores-sum-num">{totals.over}</div>
-          <div className="chores-sum-lbl">Po termínu</div>
-        </div>
-        <div className="chores-sum-card s-yellow">
-          <div className="chores-sum-num">{totals.soon}</div>
-          <div className="chores-sum-lbl">Dnes / Zítra</div>
-        </div>
-        <div className="chores-sum-card s-green">
+        <button
+          className={`chores-sum-card s-red ${filter === 'dueToday' ? 'active' : ''}`}
+          onClick={() => toggleFilter('dueToday')}
+        >
+          <div className="chores-sum-num">{totals.dueToday}</div>
+          <div className="chores-sum-lbl">Po termínu a dnes</div>
+        </button>
+        <button
+          className={`chores-sum-card s-yellow ${filter === 'tomorrow' ? 'active' : ''}`}
+          onClick={() => toggleFilter('tomorrow')}
+        >
+          <div className="chores-sum-num">{totals.tomorrow}</div>
+          <div className="chores-sum-lbl">Zítra</div>
+        </button>
+        <button
+          className={`chores-sum-card s-green ${filter === 'ok' ? 'active' : ''}`}
+          onClick={() => toggleFilter('ok')}
+        >
           <div className="chores-sum-num">{totals.ok}</div>
           <div className="chores-sum-lbl">V pořádku</div>
-        </div>
+        </button>
       </div>
 
-      {allEmpty && (
+      {filter === null && dueNow.length === 0 && doneTodayList.length === 0 && tomorrowList.length === 0 && (
         <div className="chores-all-ok">
           <span>✅</span>
           <span>Vše je v pořádku! Žádné úkoly dnes ani zítra.</span>
         </div>
       )}
 
-      {dueNow.length > 0 && (
+      {showDueToday && (dueNow.length > 0 || doneTodayList.length > 0) && (
         <div className="chores-section">
-          <div className="chores-section-hdr hdr-red">Dnes &amp; Po termínu</div>
+          <div className="chores-section-hdr hdr-red">Po termínu a dnes</div>
           <div className="chores-floor-body">
             {dueNow.map(c => (
               <ChoreCard key={c.id} chore={c} history={history} chores={chores} onComplete={onComplete} />
+            ))}
+            {doneTodayList.map(c => (
+              <ChoreCard key={c.id} chore={c} history={history} chores={chores} onComplete={onComplete} done />
             ))}
           </div>
         </div>
       )}
 
-      {tomorrowList.length > 0 && (
+      {showTomorrow && tomorrowList.length > 0 && (
         <div className="chores-section">
           <div className="chores-section-hdr hdr-yellow">Zítra</div>
           <div className="chores-floor-body">
@@ -382,13 +408,16 @@ function ChoresDashboard({ state, onComplete }) {
         </div>
       )}
 
-      {doneTodayList.length > 0 && (
+      {showOk && (
         <div className="chores-section">
-          <div className="chores-section-hdr hdr-green">Splněno dnes</div>
+          <div className="chores-section-hdr hdr-green">V pořádku</div>
           <div className="chores-floor-body">
-            {doneTodayList.map(c => (
-              <ChoreCard key={c.id} chore={c} history={history} chores={chores} onComplete={onComplete} done />
-            ))}
+            {okList.length === 0
+              ? <p className="chores-empty-floor">Žádné další činnosti.</p>
+              : okList.map(c => (
+                  <ChoreCard key={c.id} chore={c} history={history} chores={chores} onComplete={onComplete} />
+                ))
+            }
           </div>
         </div>
       )}

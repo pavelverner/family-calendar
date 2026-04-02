@@ -1485,12 +1485,24 @@ input[type="time"].form-input {
   padding: 14px 8px;
   box-shadow: 0 1px 3px var(--shadow);
   text-align: center;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  -webkit-tap-highlight-color: transparent;
+  font: inherit;
 }
+.chores-sum-card:hover { filter: brightness(.97); }
 .chores-sum-num { font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 3px; }
 .chores-sum-lbl { font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); }
 .chores-sum-card.s-red    .chores-sum-num { color: #c53030; }
 .chores-sum-card.s-yellow .chores-sum-num { color: #d69e2e; }
 .chores-sum-card.s-green  .chores-sum-num { color: #38a169; }
+.chores-sum-card.s-red.active    { border-color: #c53030; background: #fff5f5; }
+.chores-sum-card.s-yellow.active { border-color: #d69e2e; background: #fffff0; }
+.chores-sum-card.s-green.active  { border-color: #38a169; background: #f0fff4; }
+[data-theme="dark"] .chores-sum-card.s-red.active    { background: rgba(197,48,48,.15); }
+[data-theme="dark"] .chores-sum-card.s-yellow.active { background: rgba(214,158,46,.15); }
+[data-theme="dark"] .chores-sum-card.s-green.active  { background: rgba(56,161,105,.15); }
 
 /* Dashboard sections */
 .chores-section { margin-bottom: 20px; }
