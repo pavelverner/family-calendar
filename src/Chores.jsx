@@ -347,17 +347,15 @@ function ChoresDashboard({ state, onComplete }) {
   );
 
   const totals = useMemo(() => {
-    let dueToday = 0, tmrw = 0, ok = 0;
+    let dueToday = 0, ok = 0;
     chores.forEach(c => {
       const u = urgency(history, c);
       const done = isCompletedToday(history, c.id);
-      const plannedTmrw = isPlannedOn(history, c, tomorrow);
       if (done || u === 'overdue' || u === 'today') dueToday++;
-      else if (plannedTmrw) tmrw++;
-      else ok++;
+      else if (!isPlannedOn(history, c, tomorrow)) ok++;
     });
-    return { dueToday, tomorrow: tmrw, ok };
-  }, [chores, history, tomorrow]);
+    return { dueToday, tomorrow: tomorrowList.length, ok };
+  }, [chores, history, tomorrow, tomorrowList]);
 
   function toggleFilter(key) {
     setFilter(f => f === key ? null : key);
